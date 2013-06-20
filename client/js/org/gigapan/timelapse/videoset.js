@@ -991,8 +991,10 @@ if (!window['$']) {
 
       var error = video.getCurrentTime() - leader - _getCurrentTime();
 
-      if ((_isPaused() || videoStalled) && Math.abs(error) > DEFAULT_ERROR_THRESHOLD) {
-        UTIL.log("video(" + video.id + ") videoSeeked():  readyState=[" + video.readyState + "] currentTime=[" + video.getCurrentTime() + "] error=[" + error + "] is too high, must re-seek");
+      //if ((_isPaused() || videoStalled) && Math.abs(error) > DEFAULT_ERROR_THRESHOLD) {
+      if ((_isPaused() /*|| videoStalled*/) && Math.abs(error) > DEFAULT_ERROR_THRESHOLD) {
+        //UTIL.log("video(" + video.id + ") videoSeeked():  readyState=[" + video.readyState + "] currentTime=[" + video.getCurrentTime() + "] error=[" + error + "] is too high, must re-seek");
+        UTIL.log("video(" + video.id + ") videoSeeked():  readyState=[" + video.readyState + "] currentTime=[" + video.getCurrentTime() + "] error=[" + error + "] is too high, must re-seek: " + _isPaused() + "," + videoStalled);
         _setVideoToCurrentTime(video);
       } else {
         videoStalled = false;
@@ -1243,7 +1245,8 @@ if (!window['$']) {
         if (video.readyState >= 1 && (Math.abs(error) >= errorThreshold || emulatingPlaybackRate)) {// HAVE_METADATA=1
           perfTimeCorrections.push(error);
           var rateTweak = 1 - error / syncIntervalTime;
-          if (!advancing || emulatingPlaybackRate || rateTweak < 0.25 || rateTweak > 2) {
+ //if (!advancing || emulatingPlaybackRate || rateTweak < 0.25 || rateTweak > 2) {
+          if (!advancing || emulatingPlaybackRate || rateTweak < 0.05 || rateTweak > 10) {
             perfTimeSeeks++;
             //UTIL.log("current time " + video.getCurrentTime());
             //UTIL.log("leader " + leader);
@@ -1254,7 +1257,7 @@ if (!window['$']) {
             // DEBUG 3
             //if ((!advancing && video.seeking) || (advancing && !emulatingPlaybackRate))
             //if ((!advancing && video.seeking && video.currentTime < duration))
-            if (!advancing)
+            if (fields.master && !advancing)
               stall(true);
             var desiredTime = leader + t + ( advancing ? playbackRate * errorThreshold * 0.5 : 0);
             // seek ahead slightly if advancing
