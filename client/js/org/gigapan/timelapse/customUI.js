@@ -161,14 +161,14 @@ if (!org.gigapan.timelapse.Timelapse) {
       createCustomTimeline();
 
       // Update certain properties on window resize
-      //$(window).resize(function() {
-       // updateVariableDimensions();
-      //});
+      $(window).resize(function() {
+        updateVariableDimensions();
+      });
       updateVariableDimensions();
     };
 
     var updateVariableDimensions = function() {
-      //timelapse.fitVideoToViewport(window.innerWidth, window.innerHeight);
+      timelapse.fitVideoToViewport(window.innerWidth, window.innerHeight);
       viewerWidth = $viewer.width();
       sliderLeftMargin_pct = (sliderLeftMargin / viewerWidth) * 100;
       sliderRightMargin_pct = (sliderRightMargin / viewerWidth) * 100;

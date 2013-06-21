@@ -49,12 +49,21 @@ var viewsync = io
   .on('connection', function (socket) {
     // send the last known state to the client on connection
     for( var sig in state ) {
-      syncSingle( socket, sig, state[sig] );
+      //syncSingle( socket, sig, state[sig] );
     }
     bounce( socket, 'view' );
     bounce( socket, 'time' );
     bounce( socket, 'play' );
   });
+
+//
+// the controller for the webpage with buttons
+//
+var controller = io
+.of('/controller')
+.on('connection', function (socket) {
+    bounce( socket, 'setLocation' );
+    });
 
 //
 // spacenav, to be modularized
@@ -97,7 +106,7 @@ var navstate = function MultiAxisState() {
       case EV_ABS:
         abs[axis] = value;
         updates += 1;
-        //LogState();
+        LogState();
         break;
     }
   }

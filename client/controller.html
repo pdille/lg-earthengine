@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="js/jquery/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js" type="text/javascript"></script>
+    <script src="js/fields.js" type="text/javascript"></script>
+      
+    <style type="text/css">
+      table {margin: 0 auto;}
+      td {width: 260px; height: 300px; vertical-align: top}
+      td img {opacity: 0.8;}
+      td img:hover {opacity: 1;}
+    </style>
+
+    <script>
+      var controller;
+      function init() {
+        controller = io.connect('/controller');
+      }
+ 
+      $(document).ready(function() {
+        init();
+        var warp = function() {
+          var locationElem = $(this);
+          if (locationElem.attr('disabled') == "disabled") return;
+          locationElem.attr('disabled', 'disabled');
+          var viewString = locationElem.attr("data-view");
+          if (viewString) {
+            var viewArray = viewString.split(",");
+            if (viewArray.length < 3) return;
+            var newView = {center: {"lat": viewArray[0], "lng":
+            viewArray[1]}, "zoom": viewArray[2]};
+            console.log(newView);
+            controller.emit("setLocation", newView);
+            // Prevent overclicking with a timeout.
+            // Would be best to detect when the final action actuallycompletes though.
+            setTimeout(function() {
+              locationElem.removeAttr('disabled');
+            }, 4000);
+          }
+        };
+        $('.warpLocation').bind("click", warp);
+      });
+    </script>
+  </head>
+  <body>
+    <table cellpadding="10" cellspacing="0">
+      <tr>
+        <td>
+          <img src="images/controller/vegas.png" class="warpLocation" data-view="36.15759,-115.18325,10"></img>
+          <p><b>Growth of Las Vegas, Nevada</b> <br> Urban expansion and water resources in the Nevada desert.</p>
+        </td>
+        <td>
+          <img src="images/controller/brazil.png" class="warpLocation" data-view="-10.22878,-63.05315,6.5"></img>
+          <p><b>Amazon Deforestation, Brazil</b> <br> Deforestation of the Amazon rainforest.</p>
+        </td>
+        <td>
+          <img src="images/controller/wyoming.png" class="warpLocation" data-view="43.61782,-105.26973,9"></img>
+          <p><b>Wyoming Coal Mining</b> <br> Coal mining in Wyoming.</p>
+        </td>
+        <td>
+          <img src="images/controller/glacier.png" class="warpLocation" data-view="61.10448,-147.07485,8.5"></img>
+          <p><b>Columbia Glacier Retreat, Alaska</b> <br> Retreat of the Columbia Glacier in Alaska</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img src="images/controller/saudi.png" class="warpLocation" data-view="29.99062,38.42743,8"></img>
+          <p><b>Saudi Arabia Irrigation</b> <br> Center-pivot irrigation sites (crop circles) in Saudi Arabia</p>
+        </td>
+        <td>
+          <img src="images/controller/dubai.png" class="warpLocation" data-view="25.15472,55.15584,8.5"></img>
+          <p><b>Dubai Coastal Expansion</b> <br> Creation of the artificial Palm Island off the coast of Dubai</p>
+        </td>
+        <td>
+          <img src="images/controller/urmia.png" class="warpLocation" data-view="37.61174,45.54071,7"></img>
+          <p><b>Drying of Lake Urmia, Iran</b> <br> Drying of Lake Urmia</p>
+        </td>
+        <td>
+          <img src="images/controller/aral.png" class="warpLocation" data-view="45.36102,60.14896,5"></img>
+          <p><b>Drying of the Aral Sea </b> <br> Drying of the Aral Sea</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

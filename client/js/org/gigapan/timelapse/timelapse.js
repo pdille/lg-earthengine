@@ -1346,6 +1346,7 @@ if (!window['$']) {
     var limitScale = function(scale) {
       return Math.max(_getMinScale(), Math.min(_getMaxScale(), scale));
     };
+ this.limitScale = limitScale;
 
     var view2string = function(view) {
       return "[view x:" + view.x + " y:" + view.y + " scale:" + view.scale + "]";

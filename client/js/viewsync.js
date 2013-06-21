@@ -85,15 +85,15 @@ function viewsync_init() {
           xyExtents = true;
         }
         
-		console.log(xyExtents);
+		//console.log(xyExtents);
         if ( xyExtents ) {
-          console.log( 'adjusted view:' );
-          console.log( view );
+          //console.log( 'adjusted view:' );
+          //console.log( view );
           timelapse.setNewView( view, true );
           bbox = timelapse.getBoundingBoxForCurrentView();
         }
 
-        console.log( bbox );
+        //console.log( bbox );
         viewsync.emit( 'view', bbox );
       });
       timelapse.addTimeChangeListener( function() {
@@ -117,10 +117,10 @@ function viewsync_init() {
   } else {
     // events for slaves
     viewsync.on('sync view', function(data) {
-      console.log( 'sync view: x: ' + data.xmin + '-' + data.xmax
-                   + ' y: ' + data.ymin + '-' + data.ymax
-                   + ' scale: ' + data.scale
-                 );
+      //console.log( 'sync view: x: ' + data.xmin + '-' + data.xmax
+      //             + ' y: ' + data.ymin + '-' + data.ymax
+      //             + ' scale: ' + data.scale
+      //           );
       var xoffset = ( data.xmax - data.xmin ) * yawOffset;
       var yoffset = ( data.ymax - data.ymin ) * pitchOffset;
       var adjusted = {
@@ -134,7 +134,7 @@ function viewsync_init() {
       timelapse.setNewView( adjusted, true );
     });
     viewsync.on('sync time', function (data) {
-      console.log( 'sync time: ' + data.time );
+      //console.log( 'sync time: ' + data.time );
       //var diff = timelapse.getCurrentTime() - data.time;
       //if( Math.abs( diff ) > MAX_TIME_DIFF || data.absolute ) {
         //console.log( 'out of sync by ' + diff + '! seeking..' );
@@ -164,56 +164,6 @@ function get_video_length() {
          * timelapse.getPlaybackRate();
 }
 
-// multi-axis input device handling
-// TODO refactor this stuff
-if (fields.master) {
-  var multiaxis = io.connect('/multiaxis');
-  multiaxis.on('connect',function() {
-          //console.log('MultiAxis connected');
-  });
 
-  var NAV_SENSITIVITY = 0.005;
-  var NAV_GUTTER_VALUE = 12;
 
-  multiaxis.on('state',function(data) {
-    //console.log('multiaxis abs: ' + data.abs);
-    var v = 0;
-    var h = 0;
-    var f = 0;
-    var value;
-    var dirty = false;
-    for( var axis in data.abs ) {
-      switch(axis) {
-        case '3':
-          value = data.abs[axis];
-          if( Math.abs( value ) > NAV_GUTTER_VALUE ) {
-            v = value * NAV_SENSITIVITY;
-            dirty = true;
-          }
-          break;
-        case '5':
-          value = data.abs[axis];
-          if( Math.abs( value ) > NAV_GUTTER_VALUE ) {
-            h = value * NAV_SENSITIVITY;
-            dirty = true;
-          }
-          break;
-        case '1':
-          value = data.abs[axis];
-          if( Math.abs( value ) > NAV_GUTTER_VALUE ) {
-            f = value * NAV_SENSITIVITY;
-            dirty = true;
-          }
-          break;
-      }
-    }
-    if (dirty) {
-      console.log( 'updating view from multiaxis state' );
-      // XXX
-    }
-  });
 
-  multiaxis.on('disconnect',function() {
-    console.log('MultiAxis disconnected');
-  });
-}
