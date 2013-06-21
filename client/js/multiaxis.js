@@ -58,17 +58,17 @@ if (fields.master) {
                var dirty = false;
                for( var axis in data.abs ) {
                switch(axis) {
-               case '3':
+               case '2':
                value = data.abs[axis];
                NAV_yMotion = value * NAV_SENSITIVITY;
                break;
-               case '4':
+               case '0':
                value = data.abs[axis];
-               NAV_xMotion = -value * NAV_SENSITIVITY;
+               NAV_xMotion = value * NAV_SENSITIVITY;
                break;
-               case '2':
+               case '1':
                value = data.abs[axis];
-               NAV_zoom = -value * NAV_SENSITIVITY;
+               NAV_zoom = value * NAV_SENSITIVITY;
                break;
                }
                }
