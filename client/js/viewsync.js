@@ -98,7 +98,6 @@ function viewsync_init() {
         //console.log( bbox );
 		
 		if (controlsOnMaster) {
-		  console.log('master');
 		  timelapse.updateTagInfo_locationData();
 		}
 
@@ -141,12 +140,10 @@ function viewsync_init() {
         }
       };
 	  
-	  if (!controlsOnMaster) {
-		  if ( (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) || 
-			   (!fields.yawOffset && fields.pitchOffset == fields.screensBottom) ) {
-			timelapse.updateTagInfo_locationData();
-		  }
-      }
+	  if ( (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) || 
+		   (!fields.yawOffset && fields.pitchOffset == fields.screensBottom) ) {
+		timelapse.updateTagInfo_locationData();
+	  }
       timelapse.setNewView( adjusted, true );
     });
     viewsync.on('sync time', function (data) {
