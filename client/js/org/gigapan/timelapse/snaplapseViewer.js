@@ -693,6 +693,7 @@ function playCachedSnaplapse(snaplapseId) {
       $("#" + timelapseViewerDivId + " .snaplapse-annotation-description > div").text("");
 
       if ( typeof json != 'undefined' && json != null) {
+        timelapse.pause();
         return snaplapse.loadFromJSON(json, 0);
       }
 
@@ -1011,8 +1012,9 @@ function playCachedSnaplapse(snaplapseId) {
             if (insertionIndex == loadKeyframesLength - 1) {
               $(".loadingOverlay").remove();
               $(document.body).css("cursor", "default");
-              var bounds = snaplapse.getKeyframes()[0].bounds;
-              timelapse.warpToBoundingBox(bounds);
+              var firstFrame = snaplapse.getKeyframes()[0];
+              timelapse.warpToBoundingBox(firstFrame.bounds);
+              timelapse.seek(firstFrame.time);
               var listeners = eventListeners["snaplapse-loaded"];
               if (listeners) {
                 for (var i = 0; i < listeners.length; i++) {
