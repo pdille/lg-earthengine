@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing the snaplapse visualization
 
@@ -38,7 +41,9 @@
  VERIFY NAMESPACE
 
  Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
- */"use strict";
+ */
+
+"use strict";
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -95,7 +100,6 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     var videoset = timelapse.getVideoset();
     var viewerType = UTIL.getViewerType();
-    var counter = 0;
     var composerDivId = snaplapse.getComposerDivId();
     var visualizerDivId = composerDivId + "_visualizer";
     var videoDivID = timelapse.getVideoDivId();
@@ -108,7 +112,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     var navWidth = visualizerGeometry.width;
     var navHeight = visualizerGeometry.height;
-    //variables for all visualizer elements
+    // Variables for all visualizer elements
     var visualizer;
     var navigationMap_container;
     var $navigationMap_container;
@@ -126,7 +130,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var $hideMapCheckbox;
     var $hideMapLabel;
     var panoVideo;
-    //variables for kinetic JS
+    // Variables for kinetic JS
     var timewarpMap_stage;
     var timewarpMap_layer_navigation;
     var timewarpMap_box;
@@ -143,7 +147,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var navigationMap_mask;
     var navigationMap_box;
     var navigationMap_circle;
-    //variables for attributes
+    // Variables for attributes
     var timewarpMap_width;
     var timewarpMap_height;
     var navigationMap_width;
@@ -151,27 +155,22 @@ if (!org.gigapan.timelapse.Timelapse) {
     var tagsNavigation_position;
     var tagsTimewarp_position;
     var isHideNavigationMap = false;
-    //parameters for tagBot and tagRight
-    var tagTransitionFillOpacity = 0.1;
+    // Parameters for tagBot and tagRight
     var tagOpacity = 0.5;
     var maskOpacity = 0.8;
     var strokeOpacity = 0.8;
-    var tagTransitionLineOpacity = 0.6;
-    var tagTransitionLineWidth = 2;
-    var tagWeight = 6;
     var dotsPerSecond = 8;
-    //parameters for navigation map
+    // Parameters for navigation map
     var navigationMapBox_borderWidth = 1;
     var navigationMapCircle_borderWidth = 1;
     var navigationMap_box_strokeOpacity = 0.8;
     var navigationMap_circle_radius = 5;
     var navigationMap_circle_strokeOpacity = 0.8;
     var navigationMap_tag_strokeWidth = 1;
-    var navigationMap_tag_fillOpacity = 0.5;
     var navigationMap_tag_strokeOpacity = 0.7;
     var navigationMap_line_strokeOpacity = 0.4;
     var navigationMap_line_strokeWidth = 2;
-    //parameters for timewarp map
+    // Parameters for timewarp map
     var timewarpMapBox_borderWidth = 1;
     var timewarpMapCircle_borderWidth = 1;
     var timewarpMap_box_strokeOpacity = 0.8;
@@ -181,16 +180,16 @@ if (!org.gigapan.timelapse.Timelapse) {
     var timewarpMap_tag_fillOpacity = 0.5;
     var timewarpMap_tag_strokeOpacity = 0.7;
     var timewarpMap_line_strokeOpacity = 0.4;
-    var timewarpMap_tag_strokeOpacity_mouseover = 1;
     var timewarpMap_line_strokeWidth = 2.5;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     // Private methods
     //
-    //create snaplapse visualizer elements
+
+    // Create snaplapse visualizer elements
     var createSnaplapseVisualizerElements = function() {
-      //create div elements
+      // Create div elements
       visualizer = createAnElement("div", "", visualizerDivId);
       navigationMap_container = createAnElement("div", "navigationMap_container", visualizerDivId + "_navigationMap_container");
       navigationMap = createAnElement("div", "navigationMap", visualizerDivId + "_navigationMap");
@@ -207,17 +206,17 @@ if (!org.gigapan.timelapse.Timelapse) {
       $hideMapLabel = $('<label class="hideMapLabel" title="Hide/Show map"></label>');
       $hideMapCheckbox.attr("id", viewerDivId + "_hideMapCheckbox");
       $hideMapLabel.attr("for", viewerDivId + "_hideMapCheckbox");
-      //jQuery
+      // jQuery
       $navigationMap_container = $(navigationMap_container);
       $timewarpMap_container = $(timewarpMap_container);
       $tagsTimewarp = $(tagsTimewarp);
       $tagsNavigation = $(tagsNavigation);
-      //append elements
+      // Append elements
       $navigationMap_container.append(navigationMap, tagsNavigation);
       $timewarpMap_container.append(timewarpMap_panoVideo, timewarpMap, tagsTimewarp);
       $("#" + viewerDivId).append(navigationMap_container, timewarpMap_container, $toggleMapCheckbox, $toggleMapLabel, $hideMapCheckbox, $hideMapLabel);
       $(document.body).append(visualizer);
-      //create toggle map button
+      // Create toggle map button
       $toggleMapCheckbox.button({
         icons: {
           secondary: "ui-icon-newwin"
@@ -243,7 +242,7 @@ if (!org.gigapan.timelapse.Timelapse) {
           $navigationMap_container.stop(true, true).fadeIn(200);
         }
       });
-      //create hide/show map button
+      // Create hide/show map button
       $hideMapCheckbox.button({
         icons: {
           primary: "ui-icon-arrowthick-1-ne"
@@ -266,18 +265,9 @@ if (!org.gigapan.timelapse.Timelapse) {
           });
         }
       });
-      //set position and size
-      var playerOffset = $(".tiledContentHolder").offset();
-      var playerLeft = playerOffset.left;
-      var playerTop = playerOffset.top;
-      var playerWidth = $(".tiledContentHolder").outerWidth();
-      var playerHeight = $(".tiledContentHolder").outerHeight();
-      var sliderHeight = $(".timelineSliderFiller").outerHeight();
-      var controlHeight = $(".controls").outerHeight();
-      var newWidth = playerWidth;
-      var newHeight = playerHeight + controlHeight + sliderHeight;
-      var totalWidth = newWidth + navWidth;
-      var totalHeight = newHeight + navHeight;
+      // Set position and size
+      var playerWidth = $("#" + videoDivID).outerWidth();
+      var playerHeight = $("#" + videoDivID).outerHeight();
       $navigationMap_container.css({
         "right": "20px",
         "top": "20px",
@@ -288,14 +278,14 @@ if (!org.gigapan.timelapse.Timelapse) {
         "width": (playerWidth - 2) + "px",
         "height": (playerHeight - 2) + "px"
       });
-      //get attributes
+      // Get attributes
       timewarpMap_width = $(timewarpMap).width();
       timewarpMap_height = $(timewarpMap).height();
       navigationMap_width = $(navigationMap).width();
       navigationMap_height = $(navigationMap).height();
       tagsNavigation_position = $(tagsNavigation).position();
       tagsTimewarp_position = $(tagsTimewarp).position();
-      //initialize kineticJS for navigation map
+      // Initialize kineticJS for navigation map
       navigationMap_stage = new Kinetic.Stage({
         container: navigationMap.id,
         width: navigationMap_width,
@@ -313,14 +303,14 @@ if (!org.gigapan.timelapse.Timelapse) {
       navigationMap_layer_mask.setZIndex(3);
       navigationMap_layer_navigation.setZIndex(5);
       navigationMap_layer_tag.setZIndex(7);
-      //initialize kineticJS for navigation map background layer
+      // Initialize kineticJS for navigation map background layer
       navigationMap_background = new Kinetic.Image({
         x: 0,
         y: 0,
       });
       navigationMap_layer_background.add(navigationMap_background);
       navigationMap_layer_background.draw();
-      //initialize kineticJS for navigation map navigation layer
+      // Initialize kineticJS for navigation map navigation layer
       navigationMap_box = new Kinetic.Rect({
         x: 0,
         y: 0,
@@ -341,7 +331,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       navigationMap_layer_navigation.add(navigationMap_circle);
       navigationMap_layer_navigation.add(navigationMap_box);
       navigationMap_layer_navigation.draw();
-      //initialize kineticJS for navigation map mask layer
+      // Initialize kineticJS for navigation map mask layer
       navigationMap_mask = new Kinetic.Polygon({
         points: [{
           "x": 0,
@@ -355,7 +345,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       });
       navigationMap_layer_mask.add(navigationMap_mask);
       navigationMap_layer_mask.draw();
-      //initialize kineticJS for timewarp map
+      // Initialize kineticJS for timewarp map
       timewarpMap_stage = new Kinetic.Stage({
         container: timewarpMap.id,
         width: timewarpMap_width,
@@ -370,7 +360,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       timewarpMap_layer_mask.setZIndex(1);
       timewarpMap_layer_navigation.setZIndex(3);
       timewarpMap_layer_tag.setZIndex(5);
-      //initialize kineticJS for timewarp map navigation layer
+      // Initialize kineticJS for timewarp map navigation layer
       timewarpMap_box = new Kinetic.Rect({
         x: 0,
         y: 0,
@@ -391,7 +381,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       timewarpMap_layer_navigation.add(timewarpMap_circle);
       timewarpMap_layer_navigation.add(timewarpMap_box);
       timewarpMap_layer_navigation.draw();
-      //initialize kineticJS for timewarp map mask layer
+      // Initialize kineticJS for timewarp map mask layer
       timewarpMap_mask = new Kinetic.Polygon({
         points: [{
           "x": 0,
@@ -405,7 +395,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       });
       timewarpMap_layer_mask.add(timewarpMap_mask);
       timewarpMap_layer_mask.draw();
-      //set event listener
+      // Set event listener
       $timewarpMap_container.mousewheel(timelapse.handleMousescrollEvent);
       $timewarpMap_container.mousedown(function(event) {
         timelapse.handleMousedownEvent(event, true);
@@ -413,7 +403,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       $timewarpMap_container.dblclick(timelapse.handleDoubleClick_warp);
     };
 
-    //create an element
+    // Create an element
     var createAnElement = function(elemType, elemClass, elemId) {
       var element = document.createElement(elemType);
       $(element).addClass(elemClass);
@@ -425,7 +415,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       //console.log(kineticLayer.getChildren());
     };
 
-    //draw a Catmull–Rom spline on the canvas (Cardinal spline with tension=1)
+    // Draw a Catmull-Rom spline on the canvas (Cardinal spline with tension=1)
     var drawSpline = function(kineticLayer, pStart, pEnd, lineW, lineColor, id, name) {
       var controlPoint = {
         x: (pStart.x + pEnd.x) / 3,
@@ -447,8 +437,8 @@ if (!org.gigapan.timelapse.Timelapse) {
         strokeWidth: lineW,
         dashArray: [lineW, lineW],
         tension: 1,
-        id: id, //end tag id
-        name: name //start tag id
+        id: id, // End tag id
+        name: name // Start tag id
       });
       //console.log(spline.getPoints());
       kineticLayer.add(controlRect);
@@ -456,7 +446,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       updateSplines(kineticLayer);
     };
 
-    //compute the span for dash lines on the visualizer
+    // Compute the span for dash lines on the visualizer
     var computeDashSpan = function(keyframe, lineW, lineLength) {
       var loopTimes = typeof keyframe['loopTimes'] == 'undefined' ? 0 : keyframe['loopTimes'];
       var waitStart = typeof keyframe['waitStart'] == 'undefined' ? 0 : keyframe['waitStart'];
@@ -474,7 +464,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       return dashSpan;
     };
 
-    //add a line to the canvas
+    // Add a line to the canvas
     var addLine = function(kineticLayer, pStart, pEnd, lineW, lineColor, id, name, keyframe, circle_radius) {
       var lineLength = Math.sqrt(Math.pow(pEnd.x - pStart.x, 2) + Math.pow(pEnd.y - pStart.y, 2));
       var angle = Math.atan2(pEnd.y - pStart.y, pEnd.x - pStart.x);
@@ -485,8 +475,8 @@ if (!org.gigapan.timelapse.Timelapse) {
         stroke: lineColor,
         strokeWidth: lineW,
         dashArray: [lineW, computeDashSpan(keyframe, lineW, lineLength)],
-        id: id, //end tag id
-        name: name //start tag id
+        id: id, // End tag id
+        name: name // Start tag id
       });
       kineticLayer.add(line);
 
@@ -496,7 +486,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         var toY = pEnd.y - circle_radius * Math.sin(angle);
         var headlen = circle_radius;
         var rgb = lineColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),.*\)$/);
-        var arrowHeadColor = "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",1)"
+        var arrowHeadColor = "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",1)";
         var arrowHead = new Kinetic.Polygon({
           points: [toX - headlen * Math.cos(angle - Math.PI / open), toY - headlen * Math.sin(angle - Math.PI / open), toX, toY, toX - headlen * Math.cos(angle + Math.PI / open), toY - headlen * Math.sin(angle + Math.PI / open)],
           fill: arrowHeadColor,
@@ -508,7 +498,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       }
     };
 
-    //update a line on the canvas
+    // Update a line on the canvas
     var updateLine = function(kineticLayer, tagId, keyframe) {
       var line = kineticLayer.get("." + tagId)[0];
       var points = line.getPoints();
@@ -517,7 +507,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       line.setDashArray([lineW, computeDashSpan(keyframe, lineW, lineLength)]);
     };
 
-    //delete the lines coming out of a tag on the canvas
+    // Delete the lines coming out of a tag on the canvas
     var deleteLine_out = function(kineticLayer, tagId) {
       var line_out = kineticLayer.get("." + tagId)[0];
       var line_out_arrowHead = kineticLayer.get("." + tagId + "_arrowHead")[0];
@@ -544,7 +534,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       return connection;
     };
 
-    //delete the lines coming in and out of a tag on the canvas
+    // Delete the lines coming in and out of a tag on the canvas
     var deleteLine_in_out = function(kineticLayer, tagId) {
       var line_in = kineticLayer.get("#" + tagId)[0];
       var line_in_arrowHead = kineticLayer.get("#" + tagId + "_arrowHead")[0];
@@ -589,23 +579,24 @@ if (!org.gigapan.timelapse.Timelapse) {
       return connection;
     };
 
-    //draw a polygon on the canvas
+    // Draw a polygon on the canvas
     var drawPolygon_4Point = function(kineticLayer, p1, p2, p3, p4, color1, color2, grad_direction) {
+      var gradientStartPoint, gradientEndPoint;
       if (grad_direction == "x") {
-        var gradientStartPoint = {
+        gradientStartPoint = {
           "x": p1.x,
           "y": (p1.y + p2.y) / 2
         };
-        var gradientEndPoint = {
+        gradientEndPoint = {
           "x": p4.x,
           "y": (p3.y + p4.y) / 2
         };
       } else if (grad_direction == "y") {
-        var gradientStartPoint = {
+        gradientStartPoint = {
           "x": (p1.x + p2.x) / 2,
           "y": p1.y
         };
-        var gradientEndPoint = {
+        gradientEndPoint = {
           "x": (p3.x + p4.x) / 2,
           "y": p4.y
         };
@@ -617,16 +608,16 @@ if (!org.gigapan.timelapse.Timelapse) {
         fillLinearGradientColorStops: [0, color1, 1, color2],
         strokeWidth: 0,
       });
-      //add the shape to the layer
+      // Add the shape to the layer
       kineticLayer.add(linearGradPolygon);
     };
 
-    //add the tag on the bottom canvas
+    // Add the tag on the bottom canvas
     var addTagOnCanvas = function(tagInfo, tagContainer) {
-      //create div element
+      // Create div element
       var tagElement = document.createElement("div");
       $(tagElement).addClass("timeTag");
-      //set css
+      // Set css
       tagElement.id = tagInfo.id;
       tagElement.style.position = tagInfo.position;
       tagElement.style.backgroundColor = tagInfo.backgroundColor;
@@ -643,7 +634,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         tagElement.style.borderStyle = "solid";
       if (tagInfo.className != undefined)
         $(tagElement).addClass(tagInfo.className);
-      //add listeners
+      // Add listeners
       tagElement.addEventListener("click", function(event) {
         var snaplapseID = event.target.id.match(/[a-zA-Z0-9]+(_snaplapse_keyframe_)[a-zA-Z0-9]+/);
         snaplapseID = snaplapseID[0];
@@ -660,8 +651,6 @@ if (!org.gigapan.timelapse.Timelapse) {
         var rgb = tagColor.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
         var colorChange_head = "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",";
         var colorChange_tag = colorChange_head + tagOpacity + ")";
-        var colorChange_timewarpFill = colorChange_head + timewarpMap_tag_fillOpacity + ")";
-        var colorChange_timewarpStroke = colorChange_head + timewarpMap_tag_strokeOpacity + ")";
         $(event.target).css("background-color", colorChange_tag);
       }, false);
       $(tagContainer).append(tagElement);
@@ -696,11 +685,11 @@ if (!org.gigapan.timelapse.Timelapse) {
 
     this.getTimewarpMap_box = function() {
       return timewarpMap_box;
-    }
+    };
 
     this.getTimewarpMap_circle = function() {
       return timewarpMap_circle;
-    }
+    };
 
     this.getTimewarpMap = function() {
       return timewarpMap;
@@ -781,7 +770,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.hideTimewarpMap = hideTimewarpMap;
 
-    //update lines on the canvas
+    // Update lines on the canvas
     var updateTagPaths = function(tagIdHead, keyframe) {
       updateLine(timewarpMap_layer_tag, tagIdHead + "_timeTagTimewarp", keyframe);
       updateLine(navigationMap_layer_tag, tagIdHead + "_timeTagNavigation", keyframe);
@@ -790,8 +779,8 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.updateTagPaths = updateTagPaths;
 
-    //clone the pano video
-    this.clonePanoVideo = function(firstVideoId) {
+    // Clone the pano video
+    this.clonePanoVideo = function() {
       var firstVideo = videoset.getCurrentActiveVideo();
       panoVideo = document.createElement("video");
       // Ouch.  A brand new bug in Chrome 15 (apparently) causes videos to never load
@@ -816,6 +805,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       panoVideo.addEventListener("loadeddata", function() {
         panoVideo.currentTime = timelapse.getVideoset().getLeader();
       }, false);
+      // TODO
       panoVideo.addEventListener("timeupdate", function() {
         if (!panoVideo.seeking) {
           navigationMap_background.setAttrs({
@@ -842,9 +832,9 @@ if (!org.gigapan.timelapse.Timelapse) {
       return panoVideo;
     };
 
-    //load the navigation map (on the bottom-right of the UI)
-    var loadNavigationMap = function(firstVideoId, tagInfo_locationData) {
-      //draw the home view to the canvas
+    // Load the navigation map
+    var loadNavigationMap = function(tagInfo_locationData) {
+      // Draw the home view to the canvas
       var xmin_homeView = tagInfo_locationData.homeView.xmin;
       var ymin_homeView = tagInfo_locationData.homeView.ymin;
       var scale_homeView = tagInfo_locationData.homeView.scale;
@@ -862,21 +852,21 @@ if (!org.gigapan.timelapse.Timelapse) {
         navigationMap_drawImage.width = video.geometry.width * scale + 2;
         navigationMap_drawImage.height = video.geometry.height * scale + 2;
       }
-      //the setTimeout is a hack for chrome video bug
-      setTimeout(function() {
-        navigationMap_background.setAttrs({
-          image: video,
-          x: navigationMap_drawImage.x,
-          y: navigationMap_drawImage.y,
-          width: navigationMap_drawImage.width,
-          height: navigationMap_drawImage.height
-        });
-        navigationMap_layer_background.draw();
-      }, 100);
+      // The setTimeout is a hack for chrome video bug
+      //setTimeout(function() {
+        //navigationMap_background.setAttrs({
+        //  image: video,
+        //  x: navigationMap_drawImage.x,
+        //  y: navigationMap_drawImage.y,
+        //  width: navigationMap_drawImage.width,
+        //  height: navigationMap_drawImage.height
+        //});
+        //navigationMap_layer_background.draw();
+      //}, 100);
     };
     this.loadNavigationMap = loadNavigationMap;
 
-    //set the mode of the visualizer
+    // Set the mode of the visualizer
     var setMode = function(mode, fullScreen, noAnimation) {
       if (mode == "player" || mode == "annotator") {
         navigationMap_layer_tag.show();
@@ -913,17 +903,16 @@ if (!org.gigapan.timelapse.Timelapse) {
           navigationMap_layer_navigation.draw();
         }
       }
-    }
+    };
     this.setMode = setMode;
 
-    //update the elements in the interface related to time data
+    // Update the elements in the interface related to time data
     var updateInterface_timeData = function(tagInfo_timeData) {
-      //set the color of elements in the visualizer
+      // Set the color of elements in the visualizer
       var RGB = tagInfo_timeData.color.r + "," + tagInfo_timeData.color.g + "," + tagInfo_timeData.color.b;
       var tagColorRGB = "rgb(" + RGB + ")";
-      var tagColorRGBA_light = "rgba(" + RGB + ",0.3)";
       var tagColorRGBA_dark = "rgba(" + RGB + "," + strokeOpacity + ")";
-      //set the color of navigation map box
+      // Set the color of navigation map box
       navigationMap_box.setAttrs({
         stroke: tagColorRGB,
       });
@@ -932,7 +921,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         fill: tagColorRGBA_dark
       });
       navigationMap_layer_navigation.draw();
-      //set the color of timewarp map box
+      // Set the color of timewarp map box
       timewarpMap_box.setAttrs({
         stroke: tagColorRGB,
       });
@@ -941,14 +930,14 @@ if (!org.gigapan.timelapse.Timelapse) {
         fill: tagColorRGBA_dark
       });
       timewarpMap_layer_navigation.draw();
-      //the reason to hide and show the elements is the workaround for a webkit refresh bug
-      $(visualizer).hide().show(0);
+      // The reason to hide and show the elements is the workaround for a webkit refresh bug
+      //$(visualizer).hide().show(0);
     };
     this.updateInterface_timeData = updateInterface_timeData;
 
-    //update the elements in the interface related to location data
+    // Update the elements in the interface related to location data
     var updateInterface_locationData = function(tagInfo_locationData) {
-      //draw the bounding box on the small navigation map
+      // Draw the bounding box on the small navigation map
       var nowWidth_nav = Math.abs(tagInfo_locationData.tagPointNE_nav.x - tagInfo_locationData.tagPointSW_nav.x);
       var nowHeight_nav = Math.abs(tagInfo_locationData.tagPointNE_nav.y - tagInfo_locationData.tagPointSW_nav.y);
       navigationMap_box.setAttrs({
@@ -1003,7 +992,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       });
       navigationMap_layer_navigation.draw();
       navigationMap_layer_mask.draw();
-      //draw the bounding box on the timewarp map
+      // Draw the bounding box on the timewarp map
       var nowWidth_timewarp = Math.abs(tagInfo_locationData.tagPointNE_timewarp.x - tagInfo_locationData.tagPointSW_timewarp.x);
       var nowHeight_timewarp = Math.abs(tagInfo_locationData.tagPointNE_timewarp.y - tagInfo_locationData.tagPointSW_timewarp.y);
       timewarpMap_box.setAttrs({
@@ -1061,13 +1050,12 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.updateInterface_locationData = updateInterface_locationData;
 
-    //add a time tag on the visualization area
+    // Add a time tag on the visualization area
     var addTimeTag = function(keyframes, index) {
       var keyframe = keyframes[index];
       var keyframe_last = keyframes[index - 1];
       var keyframe_next = keyframes[index + 1];
       var tagInfo_timeData = timelapse.getTagInfo_timeData();
-      var tagInfo_locationData = timelapse.getTagInfo_locationData();
       var idHead = composerDivId + "_snaplapse_keyframe_" + keyframe.id;
       var idHead_last;
       var idHead_next;
@@ -1077,26 +1065,20 @@ if (!org.gigapan.timelapse.Timelapse) {
       if (keyframe_next != undefined) {
         idHead_next = composerDivId + "_snaplapse_keyframe_" + keyframe_next.id;
       }
-      //get the color of tags
+      // Get the color of tags
       var r = tagInfo_timeData.color.r;
       var g = tagInfo_timeData.color.g;
       var b = tagInfo_timeData.color.b;
       var color_head = "rgba(" + r + "," + g + "," + b + ",";
-      var color_tag = color_head + tagOpacity + ")";
       var color_timewarpFill = color_head + timewarpMap_tag_fillOpacity + ")";
       var color_timewarpStroke = color_head + timewarpMap_tag_strokeOpacity + ")";
-      var color_navigationFill = color_head + navigationMap_tag_fillOpacity + ")";
       var color_navigationStroke = color_head + navigationMap_tag_strokeOpacity + ")";
-      var color_tagLineNow = color_head + tagTransitionLineOpacity + ")";
-      var color_tagFillNow = color_head + tagTransitionFillOpacity + ")";
       var color_timewarpStroke_line = color_head + timewarpMap_line_strokeOpacity + ")";
       var color_navigationStroke_line = color_head + navigationMap_line_strokeOpacity + ")";
-      //variables for tag transition line
+      // Variables for tag transition line
       var pNow;
       var connection;
-      //get the position of the bot time slider
-      var tagPositionX = tagInfo_timeData.timelineX;
-      //add tagsNavigation div element
+      // Add tagsNavigation div element
       var navigationMap_circle_x = navigationMap_circle.getX();
       var navigationMap_circle_y = navigationMap_circle.getY();
       var navigationMap_circle_radius = navigationMap_circle.getRadius();
@@ -1114,7 +1096,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         "borderStyle": "solid"
       };
       addTagOnCanvas(tagInfoNavigation, tagsNavigation);
-      //add tagsTimewarp div element
+      // Add tagsTimewarp div element
       var timewarpMap_circle_x = timewarpMap_circle.getX();
       var timewarpMap_circle_y = timewarpMap_circle.getY();
       var timewarpMap_circle_radius = timewarpMap_circle.getRadius();
@@ -1133,7 +1115,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       };
       addTagOnCanvas(tagInfoTimewarp, tagsTimewarp);
       if (keyframe_last != undefined) {
-        //draw timewarpMap_tag transition
+        // Draw timewarpMap_tag transition
         connection = deleteLine_out(timewarpMap_layer_tag, idHead_last + "_timeTagTimewarp");
         pNow = {
           "x": timewarpMap_circle_x,
@@ -1143,7 +1125,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         if (connection.tagEndId != undefined) {
           addLine(timewarpMap_layer_tag, pNow, connection.pEnd, timewarpMap_line_strokeWidth, connection.color, connection.tagEndId, idHead + "_timeTagTimewarp", keyframe, timewarpMap_circle_radius);
         }
-        //draw navigation_tag transition
+        // Draw navigation_tag transition
         connection = deleteLine_out(navigationMap_layer_tag, idHead_last + "_timeTagNavigation");
         pNow = {
           "x": navigationMap_circle_x,
@@ -1154,15 +1136,15 @@ if (!org.gigapan.timelapse.Timelapse) {
           addLine(navigationMap_layer_tag, pNow, connection.pEnd, navigationMap_line_strokeWidth, connection.color, connection.tagEndId, idHead + "_timeTagNavigation", keyframe, navigationMap_circle_radius);
         }
       } else {
-        //insert a keyframe before the first keyframe
+        // Insert a keyframe before the first keyframe
         if (keyframe_next != undefined) {
-          //draw timewarpMap_tag transition
+          // Draw timewarpMap_tag transition
           pNow = {
             "x": timewarpMap_circle_x,
             "y": timewarpMap_circle_y
           };
           addLine(timewarpMap_layer_tag, pNow, keyframe_next.timeTagTimewarp, timewarpMap_line_strokeWidth, color_timewarpStroke_line, idHead_next + "_timeTagTimewarp", idHead + "_timeTagTimewarp", keyframe, timewarpMap_circle_radius);
-          //draw navigation_tag transition
+          // Draw navigation_tag transition
           pNow = {
             "x": navigationMap_circle_x,
             "y": navigationMap_circle_y
@@ -1170,10 +1152,10 @@ if (!org.gigapan.timelapse.Timelapse) {
           addLine(navigationMap_layer_tag, pNow, keyframe_next.timeTagNavigation, navigationMap_line_strokeWidth, color_navigationStroke_line, idHead_next + "_timeTagNavigation", idHead + "_timeTagNavigation", keyframe, navigationMap_circle_radius);
         }
       }
-      //redraw the layers
+      // Redraw the layers
       timewarpMap_layer_tag.draw();
       navigationMap_layer_tag.draw();
-      //save tag
+      // Save tag
       keyframe.timeTagTimewarp = {
         "x": timewarpMap_circle_x,
         "y": timewarpMap_circle_y
@@ -1186,9 +1168,9 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.addTimeTag = addTimeTag;
 
-    //delete a time tag
+    // Delete a time tag
     var deleteTimeTag = function(keyframeId, keyframe_last) {
-      //delete tags
+      // Delete tags
       var idHead = composerDivId + "_snaplapse_keyframe_" + keyframeId;
       var tagTimewarpId = idHead + "_timeTagTimewarp";
       var tagNavigationId = idHead + "_timeTagNavigation";
@@ -1198,30 +1180,30 @@ if (!org.gigapan.timelapse.Timelapse) {
       var circle_radius_navigation = $tagNavigation.width() / 2;
       $tagTimewarp.remove();
       $tagNavigation.remove();
-      //delete paths
+      // Delete paths
       var connectNavigation = deleteLine_in_out(navigationMap_layer_tag, tagNavigationId);
       var connectTimewarp = deleteLine_in_out(timewarpMap_layer_tag, tagTimewarpId);
-      //reconnect path
+      // Reconnect path
       if (connectNavigation.tagStartId != undefined && connectNavigation.tagEndId != undefined) {
         addLine(navigationMap_layer_tag, connectNavigation.pStart, connectNavigation.pEnd, navigationMap_line_strokeWidth, connectNavigation.color, connectNavigation.tagEndId, connectNavigation.tagStartId, keyframe_last, circle_radius_navigation);
       }
       if (connectTimewarp.tagStartId != undefined && connectTimewarp.tagEndId != undefined) {
         addLine(timewarpMap_layer_tag, connectTimewarp.pStart, connectTimewarp.pEnd, timewarpMap_line_strokeWidth, connectTimewarp.color, connectTimewarp.tagEndId, connectTimewarp.tagStartId, keyframe_last, circle_radius_timewarp);
       }
-      //redraw layers
+      // Redraw layers
       navigationMap_layer_tag.draw();
       timewarpMap_layer_tag.draw();
     };
     this.deleteTimeTag = deleteTimeTag;
 
-    //delete all time tags
+    // Delete all time tags
     var deleteAllTags = function() {
-      //delete elements
+      // Delete elements
       $tagsNavigation.children().remove();
       $tagsTimewarp.children().remove();
       navigationMap_layer_tag.removeChildren();
       timewarpMap_layer_tag.removeChildren();
-      //redraw layers
+      // Redraw layers
       navigationMap_layer_tag.draw();
       timewarpMap_layer_tag.draw();
     };
@@ -1232,8 +1214,6 @@ if (!org.gigapan.timelapse.Timelapse) {
     // Constructor code
     //
     createSnaplapseVisualizerElements();
-    //if (snaplapse)
-    //  snaplapse.setVisualizer(this);
     setMode("player", timelapse.isFullScreen(), true);
   };
   //end of org.gigapan.timelapse.Visualizer

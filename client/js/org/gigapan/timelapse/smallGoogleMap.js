@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing the small google map for the timelapse.
 
@@ -37,7 +40,9 @@
  VERIFY NAMESPACE
 
  Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
- */"use strict";
+ */
+
+"use strict";
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -111,7 +116,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     var lastMapGeometry;
     var googleMap;
-    var googleMapBox;
+    //var googleMapBox;
     var newestLocation = {
       "lat": undefined,
       "lng": undefined
@@ -130,30 +135,29 @@ if (!org.gigapan.timelapse.Timelapse) {
     var isMapMinimized = false;
     var zoomOffset;
     var oldGoogleMapZoom;
-    //variable for dom elements
+    // Variable for dom elements
     var smallMapContainer;
     var smallMap;
     var smallMapResizer;
     var $smallMapResizer;
     var $smallMapContainer;
     var $smallMap;
-    var $viewport = $(".tiledContentHolder");
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     // Private methods
     //
 
-    //resize the small google map (top-right mode)
+    // Resize the small google map (top-right mode)
     var resizeSmallMap = function(event) {
       var nowX = event.clientX;
       var nowY = event.clientY;
       var dx = parseInt(mapResizeStart.x - nowX);
       var dy = parseInt(nowY - mapResizeStart.y);
-      //!!!!!NEED to set the border to 0px!!!!!
+      // !!!!!NEED to set the border to 0px!!!!!
       var newHeight = mapGeometry.height + dy;
       var newWidth = mapGeometry.width + dx;
-      //check max and min size
+      // Check max and min size
       if (newHeight > minHeight && newHeight < maxHeight) {
         mapResizeStart.y = nowY;
         mapGeometry.height += dy;
@@ -163,11 +167,11 @@ if (!org.gigapan.timelapse.Timelapse) {
         mapGeometry.width += dx;
       }
       setSmallMapSize(mapGeometry.height, mapGeometry.width);
-      //update google map
+      // Update google map
       google.maps.event.trigger(googleMap, "resize");
     };
 
-    //set small google map size
+    // Set small google map size
     var setSmallMapSize = function(newHeight, newWidth, animate, onComplete, callBackOnComplete) {
       if (animate) {
         $smallMapContainer.stop(true, true).animate({
@@ -177,8 +181,8 @@ if (!org.gigapan.timelapse.Timelapse) {
           duration: 200,
           progress: onComplete,
           complete: function() {
-            onComplete();
-            callBackOnComplete();
+            if (onComplete) onComplete();
+            if (callBackOnComplete) callBackOnComplete();
           }
         });
       } else {
@@ -187,9 +191,9 @@ if (!org.gigapan.timelapse.Timelapse) {
       }
     };
 
-    //Load Google Map
+    // Load Google Map
     var loadSmallGoogleMap = function() {
-      //Load Google Map API
+      // Load Google Map API
       var style = [{
         featureType: 'road',
         elementType: 'geometry',
@@ -244,7 +248,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       googleMap.setOptions({
         styles: style
       });
-      //draw the rectangle bounding box on the map
+      // Draw the rectangle bounding box on the map
       var defaultLatLng_leftTop = new google.maps.LatLng(0, 0, true);
       var defaultLatLng_rightBot = new google.maps.LatLng(0, 0, true);
       /*googleMapBox = new google.maps.Rectangle({
@@ -256,20 +260,19 @@ if (!org.gigapan.timelapse.Timelapse) {
         map: googleMap,
         bounds: new google.maps.LatLngBounds(defaultLatLng_leftTop, defaultLatLng_rightBot)
       });*/
-      //add event listeners for the small google map
-      //google.maps.event.addListener(googleMap, 'center_changed', timelapse.updateLocation);
+      // Add event listeners for the small google map
       $(smallMapContainer).mousewheel(function(event, delta) {
         if (event.shiftKey) {
           if (delta > 0) {
-            timelapse.zoomAbout(1 / .999, undefined, undefined, true);
+            timelapse.zoomAbout(1 / 0.999, undefined, undefined, true);
           } else if (delta < 0) {
-            timelapse.zoomAbout(.999, undefined, undefined, true);
+            timelapse.zoomAbout(0.999, undefined, undefined, true);
           }
         } else {
           if (delta > 0) {
-            timelapse.zoomAbout(1 / .9, undefined, undefined, true);
+            timelapse.zoomAbout(1 / 0.9, undefined, undefined, true);
           } else if (delta < 0) {
-            timelapse.zoomAbout(.9, undefined, undefined, true);
+            timelapse.zoomAbout(0.9, undefined, undefined, true);
           }
         }
       }).dblclick(function(event) {
@@ -285,7 +288,7 @@ if (!org.gigapan.timelapse.Timelapse) {
           timelapse.updateTagInfo_locationData();
         });
       });
-      //create resizer
+      // Create resizer
       if (resizable) {
         smallMapResizer = document.createElement("div");
         $smallMapResizer = $(smallMapResizer);
@@ -305,7 +308,7 @@ if (!org.gigapan.timelapse.Timelapse) {
           $("body").bind("mouseleave", addSmallMapMouseupEvents);
         }, false);
       }
-      //create toggle button
+      // Create toggle button
       if (showToggleBtn) {
         $smallMapContainer.append('<button class="toggleGoogleMapBtn" title="Toggle the map">Toggle</button>');
         var $toggleGoogleMapBtn = $(".toggleGoogleMapBtn");
@@ -338,7 +341,7 @@ if (!org.gigapan.timelapse.Timelapse) {
           top: "0px"
         });
       }
-      //compute the zoom offset
+      // Compute the zoom offset
       var maxView = timelapse.getView();
       maxView.scale = timelapse.getMaxScale();
       var maxViewBound = timelapse.computeBoundingBoxLatLng(maxView);
@@ -352,13 +355,13 @@ if (!org.gigapan.timelapse.Timelapse) {
         oldGoogleMapZoom = googleMapZoom;
         // Google maps starts counting its zoom level at 1, so we need to add 1
         zoomOffset = googleMapZoom - maxViewerZoom + 1;
-        //zoom back to the initial view
+        // Zoom back to the initial view
         timelapse.updateTagInfo_locationData();
       });
     };
 
-    //add mouse events for resize
-    var addSmallMapMouseupEvents = function(event) {
+    // Add mouse events for resize
+    var addSmallMapMouseupEvents = function() {
       mapResizeStart.x = undefined;
       mapResizeStart.y = undefined;
       document.removeEventListener('mousemove', resizeSmallMap);
@@ -366,7 +369,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       $("body").unbind("mouseleave", addSmallMapMouseupEvents);
     };
 
-    //google map API calls
+    // Google map API calls
     var updateLocation = function() {
       var googleMapLatLng = googleMap.getCenter();
       newestLocation.lat = googleMapLatLng.lat();
@@ -376,7 +379,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       }
     };
 
-    //check location update
+    // Check location update
     var needLocationUpdate = function() {
       var roundTo = 100000;
       var last_lat = Math.round(lastLocation.lat * roundTo) / roundTo;
@@ -389,38 +392,35 @@ if (!org.gigapan.timelapse.Timelapse) {
         return false;
     };
 
-    //move the view
+    // Move the view
     var moveView_fromGoogleMap = function() {
       var moveLatLng = $.extend({}, newestLocation);
       lastLocation = moveLatLng;
-      //need to get the projection dynamically when the viewer size changes
+      // Need to get the projection dynamically when the viewer size changes
       var movePoint = timelapse.getProjection().latlngToPoint(moveLatLng);
       movePoint.scale = timelapse.getView().scale;
       var fromGoogleMapflag = true;
       timelapse.warpTo(movePoint, fromGoogleMapflag);
     };
 
-    //create small google map DOM elements
+    // Create small google map DOM elements
     var createSmallGoogleMapElements = function() {
-      //create div elements
+      // Create div elements
       smallMapContainer = document.createElement("div");
       smallMap = document.createElement("div");
-      //jQuery variables
+      // jQuery variables
       $smallMapContainer = $(smallMapContainer);
       $smallMap = $(smallMap);
-      //add class for css
+      // Add class for css
       $smallMapContainer.addClass("smallMapContainer");
       $smallMap.addClass("smallGoogleMap");
-      //set id
+      // Set id
       smallMapContainer.id = smallGoogleMapDivId + "_smallMapContainer";
       smallMap.id = smallGoogleMapDivId + "_smallMap";
-      //append elements
+      // Append elements
       $smallMapContainer.append(smallMap);
       $("#" + videoDivID).append(smallMapContainer);
-      //set geometry
-      var $tiledContentHolder = $(".tiledContentHolder");
-      var playerWidth = $tiledContentHolder.outerWidth();
-      var playerHeight = $tiledContentHolder.outerHeight();
+      // Set geometry
       var offsetX = 0;
       var offsetY = 0;
       if (( typeof (smallGoogleMapOptions["geometry"]) != "undefined")) {
@@ -452,7 +452,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         "width": mapGeometry.width + "px",
         "height": mapGeometry.height + "px"
       });
-      //get attribute
+      // Get attribute
       smallMapContainer_width = $smallMapContainer.width();
       smallMapContainer_height = $smallMapContainer.height();
       startHeight = mapGeometry.height;
@@ -477,7 +477,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     // Public methods
     //
-    //hide the small google map size
+    // Hide the small google map size
     var hideSmallMap = function() {
       if ($smallMapContainer.is(":visible")) {
         $smallMapContainer.stop(true, true).fadeOut(200);
@@ -485,7 +485,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.hideSmallMap = hideSmallMap;
 
-    //show the small google map size
+    // Show the small google map size
     var showSmallMap = function() {
       if (!$smallMapContainer.is(":visible")) {
         $smallMapContainer.stop(true, true).fadeIn(200);
@@ -493,7 +493,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.showSmallMap = showSmallMap;
 
-    //toggle the small google map size
+    // Toggle the small google map size
     var toggleSmallMapSize = function() {
       if (mapGeometry.height != 20 || mapGeometry.width != 20) {
         lastMapGeometry = $.extend({}, mapGeometry);
@@ -515,13 +515,13 @@ if (!org.gigapan.timelapse.Timelapse) {
         }
       };
       setSmallMapSize(mapGeometry.height, mapGeometry.width, true, function() {
-        //update google map
+        // Update google map
         google.maps.event.trigger(googleMap, "resize");
       }, callBackOnComplete);
     };
     this.toggleSmallMapSize = toggleSmallMapSize;
 
-    //reset the small google map size
+    // Reset the small google map size
     var resetSmallMapSize = function() {
       if (mapGeometry.height != minHeight || mapGeometry.width != minWidth) {
         lastMapGeometry = $.extend({}, mapGeometry);
@@ -532,24 +532,13 @@ if (!org.gigapan.timelapse.Timelapse) {
           mapGeometry = $.extend({}, lastMapGeometry);
       }
       setSmallMapSize(mapGeometry.height, mapGeometry.width, true, function() {
-        //update google map
+        // Update google map
         google.maps.event.trigger(googleMap, "resize");
       });
     };
     this.resetSmallMapSize = resetSmallMapSize;
 
-    //set the small google map
-    var setSmallGoogleMap_ = function(tagLatLngCenter, viewerScale) {
-      if (isMapMinimized == false) {
-        var googleMapLatlngSW = new google.maps.LatLng(tagLatLngSW.lat, tagLatLngSW.lng);
-        var googleMapLatlngNE = new google.maps.LatLng(tagLatLngNE.lat, tagLatLngNE.lng);
-        var googleMapLatlngBound = new google.maps.LatLngBounds(googleMapLatlngNE, googleMapLatlngSW);
-        googleMap.fitBounds(googleMapLatlngBound);
-      }
-    };
-    this.setSmallGoogleMap = setSmallGoogleMap;
-
-    //set the small google map
+    // Set the small google map
     var setSmallGoogleMap = function(tagLatLngCenter, viewerScale) {
       if (isMapMinimized == false) {
         if (zoomOffset == undefined)
@@ -558,30 +547,19 @@ if (!org.gigapan.timelapse.Timelapse) {
         if (extendRatio >= 1)
           extendRatio *= 0.6;
         else
-          extendRatio *= -0.5
+          extendRatio *= -0.5;
         var googleMapLatlngCenter = new google.maps.LatLng(tagLatLngCenter.lat, tagLatLngCenter.lng);
         googleMap.setCenter(googleMapLatlngCenter);
-		// corrected zooming for hyperwall usage
         var newZoom = Math.floor((timelapse.scaleToZoom(viewerScale) + zoomOffset) + extendRatio);
         if (oldGoogleMapZoom != newZoom) {
           oldGoogleMapZoom = newZoom;
           googleMap.setZoom(newZoom);
         }
-		
-		// Offset for hyperwall
-		/*var bounds = googleMap.getBounds();
-		var curCenter = googleMap.getCenter();
-		var newCenter = new google.maps.LatLng(curCenter.lat() + fields.pitchOffset*(bounds.getNorthEast().lat() - bounds.getSouthWest().lat()),
-											   curCenter.lng() + -1*fields.yawOffset*(bounds.getNorthEast().lng() - bounds.getSouthWest().lng()));
-		console.log(curCenter);
-		console.log("setting new center");									   
-		googleMap.setCenter(newCenter);*/
-		
       }
     };
     this.setSmallGoogleMap = setSmallGoogleMap;
 
-    //set the location of small google map box
+    // Set the location of small google map box
     var setSmallMapBoxLocation = function(tagLatLngNE, tagLatLngSW) {
       var boxLatLngNE_googleMap = new google.maps.LatLng(tagLatLngNE.lat, tagLatLngNE.lng, true);
       var boxLatLngSW_googleMap = new google.maps.LatLng(tagLatLngSW.lat, tagLatLngSW.lng, true);
@@ -589,9 +567,9 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.setSmallMapBoxLocation = setSmallMapBoxLocation;
 
-    //draw the small google map color
+    // Draw the small google map color
     var drawSmallMapBoxColor = function(colorRGB) {
-      //set the color
+      // Set the color
       var boxColor = "rgb(" + colorRGB.r + "," + colorRGB.g + "," + colorRGB.b + ")";
       var boxOption = {
         strokeColor: boxColor,

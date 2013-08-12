@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing the scale bar for the timelapse.
 
@@ -37,7 +40,9 @@
  VERIFY NAMESPACE
 
  Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
- */"use strict";
+ */
+
+"use strict";
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -93,7 +98,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     var scaleBarDivId = ( typeof (scaleBarOptions["scaleBarDiv"]) == "undefined") ? "scaleBar2013" : scaleBarOptions["scaleBarDiv"];
     var enableVideoQualitySelector = ( typeof (scaleBarOptions["enableVideoQualitySelector"]) == "undefined") ? false : scaleBarOptions["enableVideoQualitySelector"];
-    var minBarLength = 110;
+    var minBarLength = 113;
     var barLength = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["barLength"]) == "undefined") ? minBarLength : scaleBarOptions["geometry"]["barLength"];
     var offsetX = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["offsetX"]) == "undefined") ? 0 : scaleBarOptions["geometry"]["offsetX"];
     var offsetY = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["offsetY"]) == "undefined") ? 0 : scaleBarOptions["geometry"]["offsetY"];
@@ -111,10 +116,9 @@ if (!org.gigapan.timelapse.Timelapse) {
     var videoDivRatio;
     var videoDivBorderWidth;
     var videoQualityRatio;
-    //variables for DOM elements
+    // Variables for DOM elements
     var metricUnit_txt_DOM;
     var englishUnit_txt_DOM;
-    var metersperpixel_input;
     var scaleBar_canvas;
     var ctx_scaleBar_canvas;
     var videoQualitySelector;
@@ -130,23 +134,23 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     // Private methods
     //
-    //draw the scale bar
+    // Draw the scale bar
     var drawScaleBar = function(scaleBarSetting) {
       //set text
       metricUnit_txt_DOM.textContent = scaleBarSetting["topTxt"];
       englishUnit_txt_DOM.textContent = scaleBarSetting["bottomTxt"];
-      //clear canvas
+      // Clear canvas
       ctx_scaleBar_canvas.clearRect(0, 0, scaleBar_canvas.width, scaleBar_canvas.height);
       var startX = [scaleBarSetting["centerBar_startX"], scaleBarSetting["leftBar_startX"], scaleBarSetting["rightTopBar_startX"], scaleBarSetting["rightBottomBar_startX"]];
       var startY = [scaleBarSetting["centerBar_startY"], scaleBarSetting["leftBar_startY"], scaleBarSetting["rightTopBar_startY"], scaleBarSetting["rightBottomBar_startY"]];
       var endX = [scaleBarSetting["centerBar_endX"], scaleBarSetting["leftBar_endX"], scaleBarSetting["rightTopBar_endX"], scaleBarSetting["rightBottomBar_endX"]];
       var endY = [scaleBarSetting["centerBar_endY"], scaleBarSetting["leftBar_endY"], scaleBarSetting["rightTopBar_endY"], scaleBarSetting["rightBottomBar_endY"]];
-      drawLine(ctx_scaleBar_canvas, startX, startY, endX, endY, scaleBarSetting["strokeWidth"], "#ffffff", scaleBarSetting["topTxt"], scaleBarSetting["bottomTxt"]);
+      drawLine(ctx_scaleBar_canvas, startX, startY, endX, endY, scaleBarSetting["strokeWidth"], "#ffffff");
     };
 
-    //draw a line on the scale bar
-    var drawLine = function(context, startX, startY, endX, endY, lineW, lineColor, topTxt, bottomTxt) {
-      //draw border
+    // Draw a line on the scale bar
+    var drawLine = function(context, startX, startY, endX, endY, lineW, lineColor) {
+      // Draw border
       context.beginPath();
       context.moveTo(startX[0] - 1, startY[0]);
       context.lineTo(endX[0] + 1, endY[0]);
@@ -160,7 +164,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       context.strokeStyle = "#656565";
       context.stroke();
 
-      //draw bar
+      // Draw bar
       context.beginPath();
       for (var i = 0; i < startX.length; i++) {
         context.moveTo(startX[i], startY[i]);
@@ -171,18 +175,19 @@ if (!org.gigapan.timelapse.Timelapse) {
       context.stroke();
     };
 
-    //find the proper scale
+    // Find the proper scale
     var findScale = function(unitType, barUnit, distance, barLength) {
+      var barUnitTxt, unitArray, nowUnitIndex;
       if (unitType == "metric") {
-        var barUnitTxt = "km";
-        var unitArray = metricUnitArray;
-        var nowUnitIndex = nowMetricUnitIndex;
+        barUnitTxt = "km";
+        unitArray = metricUnitArray;
+        nowUnitIndex = nowMetricUnitIndex;
       } else if (unitType == "english") {
-        var barUnitTxt = "mi";
-        var unitArray = englishUnitArray;
-        var nowUnitIndex = nowEnglishUnitIndex;
+        barUnitTxt = "mi";
+        unitArray = englishUnitArray;
+        nowUnitIndex = nowEnglishUnitIndex;
       }
-      //update the metric unit scale
+      // Update the metric unit scale
       var barX = Math.round(barUnit / distance);
       while (barX < (barLength / 2)) {
         if (nowUnitIndex > 0) {
@@ -198,7 +203,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         } else
           break;
       }
-      //update
+      // Update
       var newBarUnit = unitArray[nowUnitIndex];
       if (unitArray[nowUnitIndex] < 1) {
         if (unitType == "metric") {
@@ -214,7 +219,6 @@ if (!org.gigapan.timelapse.Timelapse) {
       } else if (unitType == "english") {
         nowEnglishUnitIndex = nowUnitIndex;
       }
-      //return
       return {
         "barX": barX,
         "barUnit": newBarUnit,
@@ -222,7 +226,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       };
     };
 
-    //display the video quality
+    // Display the video quality
     var displayVideoQuality = function(distance) {
       var metersPerPixel = Math.round(distance.km * 1000 * 100) / 100;
       var metersPerPixel_currentResolution;
@@ -234,7 +238,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       $(metersPerPixel_text).val(metersPerPixel_currentResolution);
     };
 
-    //attach events to the video quality selector
+    // Attach events to the video quality selector
     var addVideoQualitySelectorEvents = function() {
       videoQualitySelector.addEventListener("change", function() {
         var quality = videoQualitySelector.options[videoQualitySelector.selectedIndex].value;
@@ -254,7 +258,7 @@ if (!org.gigapan.timelapse.Timelapse) {
           metersPerPixel_text.blur();
         }
       }, false);
-      metersPerPixel_text.addEventListener("blur", function(event) {
+      metersPerPixel_text.addEventListener("blur", function() {
         var $metersPerPixel_text = $(metersPerPixel_text);
         var targetDistance_km = $metersPerPixel_text.val() / 1000;
         if (!isNaN(targetDistance_km) && targetDistance_km != 0) {
@@ -273,7 +277,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       }, false);
     };
 
-    //add options
+    // Add options
     var addOptions = function(value, text, title, select_DOM) {
       var option = document.createElement("option");
       option.value = value;
@@ -282,9 +286,9 @@ if (!org.gigapan.timelapse.Timelapse) {
       select_DOM.add(option, null);
     };
 
-    //create elements for video quality
+    // Create elements for video quality
     var createVideoQualityElements = function() {
-      //create elements
+      // Create elements
       ratioBarTop = document.createElement("div");
       ratioBarBot = document.createElement("div");
       ratioBarRight = document.createElement("div");
@@ -296,7 +300,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       metersPerPixel_text.type = "text";
       var metersPerPixel_text_static_DOM = document.createElement("div");
       var videoQuality_text_static_DOM = document.createElement("div");
-      //add class for css
+      // Add class for css
       $(ratioBarTop).addClass("ratioBarTop");
       $(ratioBarBot).addClass("ratioBarBot");
       $(ratioBarRight).addClass("ratioBarRight");
@@ -308,7 +312,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       $(metersPerPixel_text).addClass("metersPerPixel_text");
       $(metersPerPixel_text_static_DOM).addClass("metersPerPixel_text_static");
       $(videoQuality_text_static_DOM).addClass("videoQuality_text_static");
-      //set id
+      // Set id
       ratioBarTop.id = scaleBarDivId + "_ratioBarTop";
       ratioBarBot.id = scaleBarDivId + "_ratioBarBot";
       ratioBarRight.id = scaleBarDivId + "_ratioBarRight";
@@ -319,10 +323,10 @@ if (!org.gigapan.timelapse.Timelapse) {
       metersPerPixel_text.id = scaleBarDivId + "_metersPerPixel_text";
       metersPerPixel_text_static_DOM.id = scaleBarDivId + "metersPerPixel_text_static";
       videoQuality_text_static_DOM.id = scaleBarDivId + "videoQuality_text_static";
-      //set text
+      // Set text
       metersPerPixel_text_static_DOM.textContent = "meters / pixel";
       videoQuality_text_static_DOM.textContent = "Quality:";
-      //add video quality options
+      // Add video quality options
       addOptions("default", "Viewer Size", "The Viewport Size", videoQualitySelector);
       addOptions("15360x8640", "15360 x 8640", "16K", videoQualitySelector);
       addOptions("11520x6480", "11520 x 6480", "12K", videoQualitySelector);
@@ -342,55 +346,52 @@ if (!org.gigapan.timelapse.Timelapse) {
       addOptions("854x480", "854 x 480", "480p", videoQualitySelector);
       addOptions("640x360", "640 x 360", "360p", videoQualitySelector);
       addOptions("427x240", "427 x 240", "240p", videoQualitySelector);
-      //append elements
+      // Append elements
       $videoQualitySelectorForm_DOM.append(videoQualitySelector);
       var $videoQualityContainer = $(videoQualityContainer);
       $videoQualityContainer.append(videoQuality_text_static_DOM, metersPerPixel_text, metersPerPixel_text_static_DOM, videoQualitySelectorForm_DOM);
       $("#" + videoDivId).append(ratioBarTop, ratioBarBot, ratioBarRight, ratioBarLeft);
       $("#" + viewerDivId + " .customEditorControl").append(videoQualityContainer);
-      //set position
-      var playerHeight = $(".tiledContentHolder").outerHeight();
-      //attach events to the video quality selector
+      // Attach events to the video quality selector
       addVideoQualitySelectorEvents();
     };
 
-    //create elements for scale bar
+    // Create elements for scale bar
     var createScaleBarElements = function() {
-      //set bar length
+      // Set bar length
       if (barLength < minBarLength) {
         barLength = minBarLength;
       }
-      //create elements
+      // Create elements
       scaleBarContainer = document.createElement("div");
       var scaleBarTop_txt_DOM = document.createElement("div");
       scaleBar_canvas = document.createElement("canvas");
       scaleBar_canvas.width = barLength + 20;
       scaleBar_canvas.height = 50;
       var scaleBarBot_txt_DOM = document.createElement("div");
-      //add class for css
+      // Add class for css
       var $scaleBarContainer = $(scaleBarContainer);
       $scaleBarContainer.addClass("scaleBarContainer");
       $(scaleBarTop_txt_DOM).addClass("scaleBarTop_txt");
       $(scaleBar_canvas).addClass("scaleBar_canvas");
       $(scaleBarBot_txt_DOM).addClass("scaleBarBot_txt");
-      //set id
+      // Set id
       scaleBarContainer.id = scaleBarDivId + "_scaleBarContainer";
       scaleBarTop_txt_DOM.id = scaleBarDivId + "_scaleBarTop_txt";
       scaleBar_canvas.id = scaleBarDivId + "_scaleBar_canvas";
       scaleBarBot_txt_DOM.id = scaleBarDivId + "_scaleBarBot_txt";
-      //set text
+      // Set text
       scaleBarTop_txt_DOM.textContent = "8000 km";
       scaleBarBot_txt_DOM.textContent = "4000 mi";
-      //append elements
+      // Append elements
       $scaleBarContainer.append(scaleBarTop_txt_DOM, scaleBar_canvas, scaleBarBot_txt_DOM);
       $("#" + videoDivId).append(scaleBarContainer);
-      //set position
-      var playerHeight = $(".tiledContentHolder").outerHeight();
+      // Set position
       $scaleBarContainer.css({
         "bottom": offsetY + 10 + "px",
         "left": offsetX + 10 + "px"
       });
-      //cache elements
+      // Cache elements
       metricUnit_txt_DOM = document.getElementById(scaleBarDivId + "_scaleBarTop_txt");
       englishUnit_txt_DOM = document.getElementById(scaleBarDivId + "_scaleBarBot_txt");
       ctx_scaleBar_canvas = scaleBar_canvas.getContext('2d');
@@ -407,39 +408,39 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     // Public methods
     //
-    //compute the video ratio bar
+    // Compute the video ratio bar
     var setVideoRatioBar = function() {
       if (videoQualityHeight != videoDivHeight && videoQualityWidth != videoDivWidth) {
         videoQualityRatio = Math.round((videoQualityWidth / videoQualityHeight) * 100) / 100;
         if (videoQualityRatio > videoDivRatio) {
-          //add top and bottom bars
+          // Add top and bottom bars
           var barHeight = Math.round((videoDivHeight - (videoDivWidth / videoQualityRatio)) / 2);
           ratioBarTop.style.height = barHeight + "px";
           ratioBarBot.style.height = barHeight + "px";
-          //set the bars
+          // Set the bars
           $(ratioBarTop).show();
           $(ratioBarBot).show();
           $(ratioBarRight).hide();
           $(ratioBarLeft).hide();
         } else if (videoQualityRatio < videoDivRatio) {
-          //add left and right bars
+          // Add left and right bars
           var barWidth = Math.round((videoDivWidth - (videoDivHeight * videoQualityRatio)) / 2);
           ratioBarLeft.style.width = barWidth + "px";
           ratioBarRight.style.width = barWidth + "px";
-          //set the bars
+          // Set the bars
           $(ratioBarTop).hide();
           $(ratioBarBot).hide();
           $(ratioBarRight).show();
           $(ratioBarLeft).show();
         } else {
-          //disable the bars
+          // Disable the bars
           $(ratioBarTop).hide();
           $(ratioBarBot).hide();
           $(ratioBarRight).hide();
           $(ratioBarLeft).hide();
         }
       } else {
-        //disable the bars
+        // Disable the bars
         $(ratioBarTop).hide();
         $(ratioBarBot).hide();
         $(ratioBarRight).hide();
@@ -448,7 +449,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.setVideoRatioBar = setVideoRatioBar;
 
-    //hide the video quality
+    // Hide the video quality
     var hideVideoQualityBar = function() {
       if ($(videoQualityContainer).is(":visible")) {
         $(videoQualityContainer).fadeOut(200);
@@ -456,7 +457,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.hideVideoQualityBar = hideVideoQualityBar;
 
-    //show the video quality
+    // Show the video quality
     var showVideoQualityBar = function() {
       if (!$(videoQualityContainer).is(":visible")) {
         $(videoQualityContainer).fadeIn(200);
@@ -464,14 +465,14 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
     this.showVideoQualityBar = showVideoQualityBar;
 
-    //set the scale bar
+    // Set the scale bar
     var setScaleBar = function(distance_pixel_lng, tagLatLngCenter) {
-      //calculate the distance of 2 center pixels in longitude
+      // Calculate the distance of 2 center pixels in longitude
       distance = {
         "km": distance_pixel_lng * (Math.PI / 180) * 6371 * Math.cos(tagLatLngCenter.lat * (Math.PI / 180)),
         "mi": distance_pixel_lng * (Math.PI / 180) * 3959 * Math.cos(tagLatLngCenter.lat * (Math.PI / 180))
       };
-      //find the new proper scale
+      // Find the new proper scale
       var metricUnitArray = metricUnit_txt_DOM.textContent.split(" ");
       var englishUnitArray = englishUnit_txt_DOM.textContent.split(" ");
       var barUnit = {
@@ -482,21 +483,21 @@ if (!org.gigapan.timelapse.Timelapse) {
         "metric": metricUnitArray[1],
         "english": englishUnitArray[1]
       };
-      //convert to km and mile
+      // Convert to km and mile
       if (barUnitTxt.metric == "m") {
-        //1 km = 1000 m
+        // 1 km = 1000 m
         barUnit.metric /= 1000;
         barUnit.metric = Math.round(barUnit.metric * 10000) / 10000;
       }
       if (barUnitTxt.english == "ft") {
-        //1 mile = 5280 feet
+        // 1 mile = 5280 feet
         barUnit.english /= 5280;
         barUnit.english = Math.round(barUnit.english * 10000) / 10000;
       }
-      //find scale
+      // Find scale
       var newScale_metric = findScale("metric", barUnit.metric, distance.km, barLength);
       var newScale_english = findScale("english", barUnit.english, distance.mi, barLength);
-      //draw the scale bar
+      // Draw the scale bar
       var min_X = 15;
       var min_Y = 13;
       var max_Y = 37;

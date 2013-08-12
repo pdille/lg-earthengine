@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing annotations in a time machine
 
@@ -420,8 +423,8 @@ if (!window['$']) {
       if (numSelected > 0) {
         var selectedAnnotationElements = selectedItems.get();
         for (var i = 0; i < numSelected; i++) {
-          var AnnotationElement = selectedAnnotationElements[i];
-          var id = AnnotationElement['id'];
+          var annotationElement = selectedAnnotationElements[i];
+          var id = annotationElement['id'];
           removeAnnotation(id);
           // The reason to hide and show the elements is the workaround for a webkit refresh bug
           $("#" + annotatorDivId + " .annotation_container").hide().show(0);

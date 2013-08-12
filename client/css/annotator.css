@@ -100,3 +100,7 @@
 .annotation_instructions {
   font-size: 12px;
 }
+
+.hideAnnotationLabel .ui-button-text {
+  height: 0px;
+}

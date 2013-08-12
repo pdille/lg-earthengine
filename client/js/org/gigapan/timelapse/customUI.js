@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing custom UI
 
@@ -33,13 +36,13 @@
 
  Authors:
  Yen-Chia Hsu (legenddolphin@gmail.com)
-
- VERIFY NAMESPACE
-
- Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 */
 
 "use strict";
+
+//
+// VERIFY NAMESPACE
+//
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -115,6 +118,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var captureTimes = timelapse.getCaptureTimes();
     var numFrames = timelapse.getNumFrames();
     var timeTickX = [];
+    var $defaultUIPlaybackButton = $("#" + viewerDivId + " .playbackButton");
 
     // In px.
     var viewerWidth;
@@ -135,6 +139,8 @@ if (!org.gigapan.timelapse.Timelapse) {
     var timeTickGrow_width = 2;
     var timeTickGrow_height = 31;
     var originalIsPaused;
+    var isOpera = org.gigapan.Util.isOpera();
+    var isSafari = org.gigapan.Util.isSafari();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -160,14 +166,39 @@ if (!org.gigapan.timelapse.Timelapse) {
       // Create timeline slider
       createCustomTimeline();
 
+      // TODO
       // Update certain properties on window resize
       $(window).resize(function() {
         updateVariableDimensions();
       });
       updateVariableDimensions();
+
+      var $speedControl = $("#" + viewerDivId + " .toggleSpeed");
+      var $googleLogo = $("#" + viewerDivId + " .googleLogo");
+      var $googleMapToggle = $("#" + viewerDivId + " .toggleGoogleMapBtn");
+      var $contextMapResizer = $("#" + viewerDivId + " .smallMapResizer");
+      var $playStopTour = $("#" + viewerDivId + " .snaplapseTourPlayBack");
+      // Set event listeners
+      var snaplapse = timelapse.getSnaplapse();
+      snaplapse.addEventListener('play', function() {
+        $("#" + viewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_stop_outline.png").css("opacity", "1.0");
+        if ($speedControl.is(':visible'))
+          timelapse.getSnaplapse().getSnaplapseViewer().hideViewerUI();
+        $playStopTour.css({
+          "left":"0px"
+        }).toggleClass("playTour stopTour").attr("title", "Click to stop this tour");
+      });
+      snaplapse.addEventListener('stop', function() {
+        $("#" + viewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_replay_outline.png").css("opacity", "1.0");
+        timelapse.getSnaplapse().getSnaplapseViewer().showViewerUI();
+        $playStopTour.css({
+          "left":"60px"
+        }).toggleClass("stopTour playTour").attr("title", "Click to play this tour");
+      });
     };
 
     var updateVariableDimensions = function() {
+      // TODO
       timelapse.fitVideoToViewport(window.innerWidth, window.innerHeight);
       viewerWidth = $viewer.width();
       sliderLeftMargin_pct = (sliderLeftMargin / viewerWidth) * 100;
@@ -185,43 +216,70 @@ if (!org.gigapan.timelapse.Timelapse) {
       $fastSpeed = $('<button class="toggleSpeed" id="fastSpeed" title="Toggle playback speed">Fast</button>');
       $mediumSpeed = $('<button class="toggleSpeed" id="mediumSpeed" title="Toggle playback speed">Medium</button>');
       $slowSpeed = $('<button class="toggleSpeed" id="slowSpeed" title="Toggle playback speed">Slow</button>');
+
+      var speedOptions = [$slowSpeed, $fastSpeed, $mediumSpeed];
+      // Speeds < 0.5x in Safari, even if emulated, result in broken playback, so do not include the "slow" (0.25x) speed option
+      if (isSafari) speedOptions.shift();
+
+      $customControl.prepend(speedOptions);
+
       $fastSpeed.button({
         text: true
       }).click(function() {
-        timelapse.setPlaybackRate(0.5);
+        timelapse.setPlaybackRate(0.5, null, true);
         $customControl.prepend($mediumSpeed);
-        $mediumSpeed.show();
-        $fastSpeed.slideUp(300, function() {
-          $fastSpeed.detach();
-        });
+        $mediumSpeed.stop(true, true).show();
+        $fastSpeed.slideUp(300);
       });
       $mediumSpeed.button({
         text: true
       }).click(function() {
-        timelapse.setPlaybackRate(0.25);
-        $customControl.prepend($slowSpeed);
-        $slowSpeed.show();
-        $mediumSpeed.slideUp(300, function() {
-          $mediumSpeed.detach();
-        });
+        // Due to playback issues, we are not allowing the "slow" option for Safari users
+        if (isSafari) {
+          timelapse.setPlaybackRate(1, null, true);
+          $customControl.prepend($fastSpeed);
+          $fastSpeed.stop(true, true).show();
+        } else {
+          timelapse.setPlaybackRate(0.25, null, true);
+          $customControl.prepend($slowSpeed);
+          $slowSpeed.stop(true, true).show();
+        }
+        $mediumSpeed.slideUp(300);
       });
       $slowSpeed.button({
         text: true
       }).click(function() {
-        timelapse.setPlaybackRate(1);
+        timelapse.setPlaybackRate(1, null, true);
         $customControl.prepend($fastSpeed);
-        $fastSpeed.show();
-        $slowSpeed.slideUp(300, function() {
-          $slowSpeed.detach();
-        });
+        $fastSpeed.stop(true, true).show();
+        $slowSpeed.slideUp(300);
       });
+
+      timelapse.addPlaybackRateChangeListener(function(rate, fromUI) {
+        var snaplapse = timelapse.getSnaplapse();
+        if (snaplapse && snaplapse.isPlaying()) return;
+        if (!fromUI) {
+          $("#" + viewerDivId + " .toggleSpeed").hide()
+          if (rate >= 1) {
+            $fastSpeed.show();
+          } else if ((rate < 1 && rate >= 0.5) || (isSafari && rate < 0.5)) {
+            $mediumSpeed.show();
+          } else {
+            $slowSpeed.show();
+          }
+        }
+      });
+
+      // Since the call to set the playback rate when first creating the timelapse
+      // happens before the UI is setup, we need to run it again below to properly
+      // update the UI.
       var playbackRate = timelapse.getPlaybackRate();
       if (playbackRate >= 1) {
-        $customControl.prepend($fastSpeed);
+        $fastSpeed.show();
       } else if (playbackRate < 1 && playbackRate >= 0.5) {
-        $customControl.prepend($mediumSpeed);
+        $mediumSpeed.show();
       } else {
-        $customControl.prepend($slowSpeed);
+        $slowSpeed.show();
       }
       // Instruction mask
       var content_instruction = "";
@@ -240,7 +298,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         },
         text: false
       }).click(function() {
-        if ($("#" + viewerDivId + " .playbackButton").hasClass("from_help")) return;
+        if ($defaultUIPlaybackButton.hasClass("from_help")) return;
         timelapse.handlePlayPause();
       });
       // Help button
@@ -258,13 +316,10 @@ if (!org.gigapan.timelapse.Timelapse) {
       }).change(function() {
         if ($customHelpCheckbox.is(":checked")) {
           doCustomHelpOverlay();
-          var toggle = function(e) {
-            if (!$(e.target).hasClass("customHelpCheckbox")) {
+          $(document).one("mouseup", function(e) {
+            if ($("#" + viewerDivId + " .customHelpCheckbox").has(e.target).length == 0)
               $customHelpCheckbox.prop("checked", false).button("refresh").change();
-              $(document).unbind("click", toggle);
-            }
-          };
-          $(document).bind("click", toggle);
+          });
         } else {
           removeCustomHelpOverlay();
         }
@@ -432,8 +487,9 @@ if (!org.gigapan.timelapse.Timelapse) {
       // Binary search
       var minFrameIdx = 0;
       var maxFrameIdx = timeTickX.length - 1;
-      var targetFrameIdx = Math.round((minFrameIdx + maxFrameIdx) / 2);
+      var targetFrameIdx;
       while (minFrameIdx != maxFrameIdx) {
+        targetFrameIdx = Math.round((minFrameIdx + maxFrameIdx) / 2);
         if (nowX <= timeTickX[targetFrameIdx])
           maxFrameIdx = targetFrameIdx;
         else {
@@ -463,19 +519,17 @@ if (!org.gigapan.timelapse.Timelapse) {
 
     var doCustomHelpOverlay = function() {
       $("#" + viewerDivId + " .customInstructions").fadeIn(200);
-
-      if ($("#" + viewerDivId + " .playbackButton").hasClass('pause')) {
+      if ($defaultUIPlaybackButton.hasClass('pause')) {
         timelapse.handlePlayPause();
-        $("#" + viewerDivId + " .playbackButton").removeClass("pause").addClass("play from_help");
+        $defaultUIPlaybackButton.removeClass("pause").addClass("play from_help");
       }
     };
 
     var removeCustomHelpOverlay = function() {
       $("#" + viewerDivId + " .customInstructions").fadeOut(200);
-
-      if ($("#" + viewerDivId + " .playbackButton").hasClass('from_help')) {
+      if ($defaultUIPlaybackButton.hasClass('from_help')) {
         timelapse.handlePlayPause();
-        $("#" + viewerDivId + " .playbackButton").addClass("pause").removeClass("play from_help");
+        $defaultUIPlaybackButton.addClass("pause").removeClass("play from_help");
       }
     };
 
@@ -485,7 +539,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       customEditorControl.append(customEditorModeToolbar);
       $("#" + viewerDivId).append(customEditorControl);
       // Create play button
-      customEditorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a time warp">Play</button>');
+      customEditorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a tour">Play</button>');
       $(".customEditorControl .playStopTimewarp").button({
         icons: {
           primary: "ui-icon-play"
@@ -496,7 +550,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().playStopSnaplapse();
       });
       // Create add button
-      customEditorModeToolbar.append('<button class="addTimetag" title="Add a time tag">Add</button>');
+      customEditorModeToolbar.append('<button class="addTimetag" title="Add a keyframe">Add</button>');
       $("#" + viewerDivId + " .addTimetag").button({
         icons: {
           primary: "ui-icon-plus"
@@ -508,7 +562,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().recordKeyframe();
       });
       // Create delete button
-      customEditorModeToolbar.append('<button class="deleteTimetag" title="Delete a time tag">Del</button>');
+      customEditorModeToolbar.append('<button class="deleteTimetag" title="Delete a keyframe">Del</button>');
       $("#" + viewerDivId + " .deleteTimetag").button({
         icons: {
           primary: "ui-icon-minus"
@@ -519,10 +573,10 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().deleteSelectedKeyframes();
       });
       // Create save button
-      customEditorModeToolbar.append('<button class="saveTimewarp" title="Save a time warp">Save</button>');
+      customEditorModeToolbar.append('<button class="saveTimewarp" title="Share a tour">Share</button>');
       $("#" + viewerDivId + " .saveTimewarp").button({
         icons: {
-          primary: "ui-icon-folder-collapsed"
+          primary: "ui-icon-person"
         },
         text: true,
         disabled: true
@@ -530,7 +584,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().saveSnaplapse();
       });
       // Create load button
-      customEditorModeToolbar.append('<button class="loadTimewarp" title="Load a time warp">Load</button>');
+      customEditorModeToolbar.append('<button class="loadTimewarp" title="Load a tour">Load</button>');
       $("#" + viewerDivId + " .loadTimewarp").button({
         icons: {
           primary: "ui-icon-folder-open"
@@ -540,12 +594,13 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().showLoadSnaplapseWindow();
       });
       // Create new button
-      customEditorModeToolbar.append('<button class="newTimewarp" title="Clear time warp">Clear</button>');
+      customEditorModeToolbar.append('<button class="newTimewarp" title="Remove all keyframes">Clear</button>');
       $("#" + viewerDivId + " .newTimewarp").button({
         icons: {
           primary: "ui-icon-trash"
         },
-        text: true
+        text: true,
+        disabled: true
       }).click(function() {
         var confirmClearAlert = confirm("Are you sure you want to clear the timewarp?");
         if (!confirmClearAlert)
@@ -554,52 +609,25 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.handleEditorModeToolbarChange();
       });
       // Create global setting button
-      customEditorModeToolbar.append('<button class="setTimewarp" title="Global settings">Settings</button>');
-      $("#" + viewerDivId + " .setTimewarp").button({
-        icons: {
-          primary: "ui-icon-wrench"
-        },
-        text: true
-      }).click(function() {
-        timelapse.getSnaplapse().getSnaplapseViewer().showSetSnaplapseWindow();
-      });
+      //customEditorModeToolbar.append('<button class="setTimewarp" title="Global settings">Settings</button>');
+      //$("#" + viewerDivId + " .setTimewarp").button({
+      //  icons: {
+      //    primary: "ui-icon-wrench"
+      //  },
+      //  text: true
+      //}).click(function() {
+      //  timelapse.getSnaplapse().getSnaplapseViewer().showSetSnaplapseWindow();
+      //});
       // Create buttonset
       customEditorModeToolbar.buttonset();
-      var customEditorModeToolbar_height = customEditorModeToolbar.height() + 5;
+      //var customEditorModeToolbar_height = customEditorModeToolbar.height() + 5;
       // Set position
-      $customControl.css("bottom", "+=" + customEditorModeToolbar_height + "px");
-      // Set event listeners
-      timelapse.getSnaplapse().addEventListener('play', function() {
-        $customTimeline.stop(true, true).fadeOut(100);
-        $("#" + viewerDivId + " .toggleSpeed").stop(true, true).fadeOut(100);
-        $customHelpLabel.stop(true, true).fadeOut(100);
-        $("#" + viewerDivId + " .googleLogo").css("bottom", "-=" + 50 + "px");
-        $customPlay.stop(true, true).fadeOut(100);
-        $timeText.css({
-          "text-align": "center",
-          "left": "-=" + 14 + "px",
-          "padding-left": "12px"
-        });
-        timelapse.getSnaplapse().getSnaplapseViewer().moveDescriptionBox("down");
-        $("#" + viewerDivId + " .toggleGoogleMapBtn").fadeOut(100);
-        $("#" + viewerDivId + " .smallMapResizer").fadeOut(100);
-      });
-      timelapse.getSnaplapse().addEventListener('stop', function() {
-        $customTimeline.stop(true, true).fadeIn(100);
-        $("#" + viewerDivId + " .toggleSpeed").stop(true, true).fadeIn(100);
-        $customHelpLabel.stop(true, true).fadeIn(100);
-        $("#" + viewerDivId + " .googleLogo").css("bottom", "+=" + 50 + "px");
-        $customPlay.stop(true, true).fadeIn(100);
-        $timeText.css({
-          "text-align": "right",
-          "left": "+=" + 14 + "px",
-          "padding-left": "0px"
-        });
-        timelapse.getSnaplapse().getSnaplapseViewer().moveDescriptionBox("up");
-        $("#" + viewerDivId + " .toggleGoogleMapBtn").fadeIn(100);
-        $("#" + viewerDivId + " .smallMapResizer").fadeIn(100);
-      });
-    };
+      //$customControl.css("bottom", "+=" + customEditorModeToolbar_height + "px");
+      var $speedControl = $("#" + viewerDivId + " .toggleSpeed");
+      var $googleLogo = $("#" + viewerDivId + " .googleLogo");
+      var $googleMapToggle = $("#" + viewerDivId + " .toggleGoogleMapBtn");
+      var $contextMapResizer = $("#" + viewerDivId + " .smallMapResizer");
+   };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //

@@ -33,6 +33,8 @@
 // Paul Dille (pdille@andrew.cmu.edu)
 // Randy Sargent (randy.sargent@cs.cmu.edu)
 
+"use strict";
+
 //
 // VERIFY NAMESPACE
 //
@@ -65,10 +67,9 @@ if (!org.gigapan) {
 // CODE
 //
 (function() {
-  var areLogging = true;
   var isChromeUserAgent = navigator.userAgent.match(/Chrome/) != null;
   var isSafariUserAgent = navigator.userAgent.match(/Safari/) != null && !isChromeUserAgent;
-  // the Chrome user agent actually has the word "Safari" in it too!
+  // The Chrome user agent actually has the word "Safari" in it too!
   var isMSIEUserAgent = navigator.userAgent.match(/MSIE/) != null;
   var matchIEVersion = navigator.userAgent.match(/MSIE\s([\d]+)/);
   var isFirefoxUserAgent = navigator.userAgent.match(/Firefox/) != null;
@@ -86,12 +87,12 @@ if (!org.gigapan) {
 
   org.gigapan.Util.isMobile = function() {
     return (navigator.userAgent.match(/Android/i) ||
-    				navigator.userAgent.match(/webOS/i) ||
-    				navigator.userAgent.match(/iPhone/i) ||
-    				navigator.userAgent.match(/iPad/i) ||
-    				navigator.userAgent.match(/iPod/i) ||
-    				navigator.userAgent.match(/BlackBerry/i) ||
-    				navigator.userAgent.match(/Windows Phone/i));
+            navigator.userAgent.match(/webOS/i) ||
+            navigator.userAgent.match(/iPhone/i) ||
+            navigator.userAgent.match(/iPad/i) ||
+            navigator.userAgent.match(/iPod/i) ||
+            navigator.userAgent.match(/BlackBerry/i) ||
+            navigator.userAgent.match(/Windows Phone/i));
   };
 
   org.gigapan.Util.browserSupported = function() {
@@ -160,9 +161,14 @@ if (!org.gigapan) {
     viewerType = type;
   };
 
+  org.gigapan.Util.playbackRateSupported = function() {
+    var video = document.createElement("video");
+    return !!video.playbackRate;
+  };
+
   org.gigapan.Util.isNumber = function(n) {
-    // code taken from http://stackoverflow.com/questions/18082/validate-numbers-in-javascript-isnumeric
-    // added check to ensure that the value being checked is defined
+    // Code taken from http://stackoverflow.com/questions/18082/validate-numbers-in-javascript-isnumeric
+    // Added check to ensure that the value being checked is defined
     return ( typeof (n) !== 'undefined') && !isNaN(parseFloat(n)) && isFinite(n);
   };
 
@@ -201,7 +207,7 @@ if (!org.gigapan) {
   };
 
   org.gigapan.Util.getCurrentTimeInSecs = function() {
-    return .001 * (new Date()).getTime();
+    return 0.001 * (new Date()).getTime();
   };
 
   org.gigapan.Util.formatTime = function(theTime, willShowMillis, willShowHours) {
@@ -231,33 +237,35 @@ if (!org.gigapan) {
     return ( willShowHours ? hoursStr + ':' : '') + minutesStr + ":" + secondsStr + ( willShowMillis ? "." + millisStr : '');
   };
 
-  // wrapper for ajax calls
+  // Wrapper for ajax calls
   org.gigapan.Util.ajax = function(dataType, rootPath, path, callback) {
+    var ajaxUrl;
     if ( typeof (cached_ajax) != "undefined") {
       // We are on file url or using cached ajax to get around
       // cross domain security policies
-      var ajaxUrl = rootPath + path;
-      // If the key does not include the full dataset URL,
-      // assume the key is in the form of "./foo.blah"
+      ajaxUrl = rootPath + path;
+      // If the key does not include the absolute dataset URL,
+      // assume the key is relative and in the form of "./foo.blah"
       if ( typeof (cached_ajax[ajaxUrl]) == "undefined")
         ajaxUrl = "./" + path;
       if ( typeof (cached_ajax[ajaxUrl]) == "undefined") {
-        org.gigapan.Util.error("Error loading key from ajax_includes [" + url + "]");
+        org.gigapan.Util.error("Error loading key from ajax_includes [" + ajaxUrl + "]");
         return;
       }
       callback(cached_ajax[ajaxUrl]);
     } else {
       // We are not on file url or we are utilizing the Chrome
       // --allow-file-access-from-files param and can do normal ajax calls
+      ajaxUrl = rootPath + path;
       $.ajax({
         dataType: dataType,
-        url: rootPath + path,
+        url: ajaxUrl,
         success: function(data) {
           if (data)
             callback(data);
         },
         error: function() {
-          org.gigapan.Util.error("Error loading file from URL [" + url + "]");
+          org.gigapan.Util.error("Error loading file from URL [" + ajaxUrl + "]");
           return;
         }
       });
@@ -294,41 +302,23 @@ if (!org.gigapan) {
     return vars;
   };
 
+  // Hash variables may contain potentially unsafe user inputted data.
+  // Caution must be taken when working with these values.
   org.gigapan.Util.getHashVars = function() {
     return org.gigapan.Util.unpackVars(window.location.hash.slice(1));
   };
 
-  org.gigapan.Util.onHashChange = function() {
-    if ((org.gigapan.Util.getHashVars().v != undefined) && (org.gigapan.Util.getHashVars().t != undefined)) {
-      var shareView = org.gigapan.Util.getHashVars().v;
-      var time = org.gigapan.Util.getHashVars().t
-      if (shareView)
-        timelapse.setNewView(timelapse.shareViewToView(shareView.split(",")), true);
-      if (time)
-        timelapse.seek(time);
-    } else if (org.gigapan.Util.getHashVars().v != undefined) {
-      var shareView = org.gigapan.Util.getHashVars().v;
-      if (shareView)
-        timelapse.setNewView(timelapse.shareViewToView(shareView.split(",")), true);
-    } else if (org.gigapan.Util.getHashVars().t != undefined) {
-      var time = org.gigapan.Util.getHashVars().t
-      if (time)
-        timelapse.seek(time);
-    }
-  };
-
-  //select an element in jQuery selectable
+  // Select an element in jQuery selectable
   org.gigapan.Util.selectSelectableElements = function($selectableContainer, $elementsToSelect) {
-    // add unselecting class to all elements in the styleboard canvas except the ones to select
+    // Add unselecting class to all elements in the styleboard canvas except the ones to select
     $(".ui-selected", $selectableContainer).not($elementsToSelect).removeClass("ui-selected").addClass("ui-unselecting");
-    // add ui-selecting class to the elements to select
+    // Add ui-selecting class to the elements to select
     $elementsToSelect.not(".ui-selected").addClass("ui-selecting");
-    //refresh the selectable to prevent errors
+    // Refresh the selectable to prevent errors
     $selectableContainer.selectable('refresh');
-    // trigger the mouse stop event (this will select all .ui-selecting elements, and deselect all .ui-unselecting elements)
+    // Trigger the mouse stop event (this will select all .ui-selecting elements, and deselect all .ui-unselecting elements)
     $selectableContainer.data("uiSelectable")._mouseStop(null);
-    //selectableContainer.data("ui-selectable")._mouseStop(null);
-    //scroll to the position
+    // Scroll to the position
     var $selectableContainerParent = $selectableContainer.parent();
     $selectableContainerParent.scrollLeft(Math.round($elementsToSelect.position().left - $selectableContainerParent.width() / 3));
   };

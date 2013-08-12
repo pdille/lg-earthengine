@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 // Class for calculating and rendering videoset stats.
 //
 // Dependencies:

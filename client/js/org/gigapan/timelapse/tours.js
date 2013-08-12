@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 var view = "youtube"
 var timelapse;
 var doHelpPrompt = true;

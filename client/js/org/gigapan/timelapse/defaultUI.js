@@ -1,3 +1,6 @@
+// @license
+// Redistribution and use in source and binary forms ...
+
 /*
  Class for managing the default UI
 
@@ -99,9 +102,9 @@ if (!org.gigapan.timelapse.Timelapse) {
     var tmJSON = timelapse.getTmJSON();
     var panInterval;
     var translationSpeedConstant = 20;
+    var $playbackButton = $("#" + viewerDivId + " .playbackButton");
 
     var visualizer = timelapse.getVisualizer();
-    //var snaplapse = timelapse.getSnaplapse();
     var annotator = timelapse.getAnnotator();
     var videoset = timelapse.getVideoset();
 
@@ -116,16 +119,13 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     // Private methods
     //
-    var createSubtitle = function() {
-      $("#" + videoDivId).append('<div class="snaplapse-annotation-description"><div></div></div>');
-    };
 
     //create the toolbar
     var createToolbar = function() {
       createPlayerModeToolbar();
       createSideToolBar();
       // Play button
-      $("#" + viewerDivId + " .playbackButton").button({
+      $playbackButton.button({
         icons: {
           secondary: "ui-icon-custom-play"
         },
@@ -312,14 +312,10 @@ if (!org.gigapan.timelapse.Timelapse) {
         },
         text: false
       }).mousedown(function() {
-        if ($("#" + viewerDivId + " .zoomSlider").slider("option", "disabled") == true)
-          return;
         intervalId = setInterval(function() {
           zoomIn();
         }, 50);
       }).click(function() {
-        if ($("#" + viewerDivId + " .zoomSlider").slider("option", "disabled") == true)
-          return;
         zoomIn();
       }).mouseup(function() {
         clearInterval(intervalId);
@@ -336,14 +332,10 @@ if (!org.gigapan.timelapse.Timelapse) {
         },
         text: false
       }).mousedown(function() {
-        if ($("#" + viewerDivId + " .zoomSlider").slider("option", "disabled") == true)
-          return;
         intervalId = setInterval(function() {
           zoomOut();
         }, 50);
       }).click(function() {
-        if ($("#" + viewerDivId + " .zoomSlider").slider("option", "disabled") == true)
-          return;
         zoomOut();
       }).mouseup(function() {
         clearInterval(intervalId);
@@ -358,8 +350,6 @@ if (!org.gigapan.timelapse.Timelapse) {
         },
         text: false
       }).click(function() {
-        if ($("#" + viewerDivId + " .zoomSlider").slider("option", "disabled") == true)
-          return;
         timelapse.warpTo(timelapse.homeView());
       });
     };
@@ -410,8 +400,8 @@ if (!org.gigapan.timelapse.Timelapse) {
       $("#" + viewerDivId + " .shareView").dialog({
         resizable: false,
         autoOpen: false,
-        width: 640,
-        height: 110,
+        width: 632,
+        height: 95,
         create: function() {
           $(this).parents("#" + viewerDivId + " .ui-dialog").css({
             'border': '1px solid #000'
@@ -419,73 +409,70 @@ if (!org.gigapan.timelapse.Timelapse) {
         }
       }).parent().appendTo($("#" + viewerDivId));
       // Create playbackSpeed menu and button
-      var speedChoiceText = createPlaybackSpeedMenu();
-      playerModeToolbar.append('<button class="playbackSpeed" title="Change playback speed">Play Speed</button>');
-      $("#" + viewerDivId + " .playbackSpeed").button({
+      createPlaybackSpeedMenu();
+      playerModeToolbar.append('<button class="playbackSpeed" title="Change playback speed"></button>');
+      var $playbackSpeed = $("#" + viewerDivId + " .playbackSpeed");
+      var $playbackSpeedOptions = $("#" + viewerDivId + " .playbackSpeedOptions");
+      $playbackSpeed.button({
         icons: {
           secondary: "ui-icon-triangle-1-s"
         },
         text: true
       }).click(function() {
-        if ($("#" + viewerDivId + " .playbackSpeedOptions").is(":visible")) {
-          $("#" + viewerDivId + " .playbackSpeedOptions").hide();
+        if ($playbackSpeedOptions.is(":visible")) {
+          $playbackSpeedOptions.hide();
         } else {
-          $("#" + viewerDivId + " .playbackSpeedOptions").show().position({
+          $playbackSpeedOptions.show().position({
             my: "left bottom",
             at: "left top",
             of: this
           });
           $("#" + viewerDivId + " .sizeOptions").hide();
           $("#" + viewerDivId + " .viewerModeOptions").hide();
-        }
-        //terrible hack
-        setTimeout(function() {
-          $(document).one("click", function(e) {
-            if (!$(e.target).closest("#" + viewerDivId + " .playbackSpeed").length) {
-              $("#" + viewerDivId + " .playbackSpeedOptions").hide();
-            }
+          $(document).one("mouseup", function(e) {
+            if ($playbackSpeed.has(e.target).length == 0)
+              $playbackSpeedOptions.hide();
           });
-        }, 200);
+        }
       });
-      $("#" + viewerDivId + " .playbackSpeed span").text(speedChoiceText);
+      //$("#" + viewerDivId + " .playbackSpeed span").text("");
       // Create size menu and button
       if (settings["showSizeBtn"] == true) {
         populateSizes();
         playerModeToolbar.append('<button class="size" title="Change viewer size">Size</button>');
-        $("#" + viewerDivId + " .size").button({
+        var $size = $("#" + viewerDivId + " .size");
+        var $sizeOptions = $("#" + viewerDivId + " .sizeOptions");
+        $size.button({
           icons: {
             secondary: "ui-icon-triangle-1-s"
           },
           text: true
         }).click(function() {
-          if ($("#" + viewerDivId + " .sizeOptions").is(":visible")) {
-            $("#" + viewerDivId + " .sizeOptions").hide();
+          if ($sizeOptions.is(":visible")) {
+            $sizeOptions.hide();
           } else {
-            $("#" + viewerDivId + " .sizeOptions").show().position({
+            $sizeOptions.show().position({
               my: "left bottom",
               at: "left top",
               of: this
             });
-            $("#" + viewerDivId + " .playbackSpeedOptions").hide();
+            $playbackSpeedOptions.hide();
             $("#" + viewerDivId + " .viewerModeOptions").hide();
-          }
-          //terrible hack
-          setTimeout(function() {
-            $(document).one("click", function(e) {
-              if (!$(e.target).closest("#" + viewerDivId + " .size").length) {
-                $("#" + viewerDivId + " .sizeOptions").hide();
-              }
+            $(document).one("mouseup", function(e) {
+              if ($size.has(e.target).length == 0)
+                $sizeOptions.hide();
             });
-          }, 200);
+          }
         });
-        $("#" + viewerDivId + " .sizeOptions").hide().menu();
+        $sizeOptions.hide().menu();
       }
       // Create help button
       playerModeToolbar.append('<input type="checkbox" class="helpPlayerCheckbox"/>');
       playerModeToolbar.append('<label class="helpPlayerLabel" title="Show instructions"></label>');
       var helpPlayerCheckbox = $("#" + viewerDivId + " .helpPlayerCheckbox");
       helpPlayerCheckbox.attr("id", viewerDivId + "_helpPlayerCheckbox");
-      $("#" + viewerDivId + " .helpPlayerLabel").attr("for", viewerDivId + "_helpPlayerCheckbox");
+      var $helpPlayerLabel = $("#" + viewerDivId + " .helpPlayerLabel");
+      $helpPlayerLabel.attr("for", viewerDivId + "_helpPlayerCheckbox");
       helpPlayerCheckbox.button({
         icons: {
           primary: "ui-icon-help"
@@ -494,14 +481,10 @@ if (!org.gigapan.timelapse.Timelapse) {
       }).change(function() {
         if (helpPlayerCheckbox.is(":checked")) {
           doHelpOverlay();
-          //terrible hack
-          setTimeout(function() {
-            $(document).one("click", function(e) {
-              if (!$(e.target).closest("#" + viewerDivId + " .helpPlayerLabel").length) {
-                helpPlayerCheckbox.prop("checked", false).button("refresh").change();
-              }
-            });
-          }, 200);
+          $(document).one("mouseup", function(e) {
+            if ($helpPlayerLabel.has(e.target).length == 0)
+              helpPlayerCheckbox.prop("checked", false).button("refresh").change();
+          });
         } else {
           removeHelpOverlay();
         }
@@ -514,7 +497,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var createEditorModeToolbar = function() {
       var editorModeToolbar = $("#" + viewerDivId + " .editorModeToolbar");
       // Create play button
-      editorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a time warp">Play</button>');
+      editorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a tour">Play</button>');
       $("#" + viewerDivId + " .playStopTimewarp").button({
         icons: {
           primary: "ui-icon-play"
@@ -525,7 +508,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().playStopSnaplapse();
       });
       // Create add button
-      editorModeToolbar.append('<button class="addTimetag" title="Add a time tag">Add</button>');
+      editorModeToolbar.append('<button class="addTimetag" title="Add a keyframe">Add</button>');
       $("#" + viewerDivId + " .addTimetag").button({
         icons: {
           primary: "ui-icon-plus"
@@ -538,7 +521,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().recordKeyframe();
       });
       // Create delete button
-      editorModeToolbar.append('<button class="deleteTimetag" title="Delete a time tag">Del</button>');
+      editorModeToolbar.append('<button class="deleteTimetag" title="Delete a keyframe">Del</button>');
       $("#" + viewerDivId + " .deleteTimetag").button({
         icons: {
           primary: "ui-icon-minus"
@@ -549,10 +532,10 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().deleteSelectedKeyframes();
       });
       // Create save button
-      editorModeToolbar.append('<button class="saveTimewarp" title="Save a time warp">Save</button>');
+      editorModeToolbar.append('<button class="saveTimewarp" title="Share a tour">Share</button>');
       $("#" + viewerDivId + " .saveTimewarp").button({
         icons: {
-          primary: "ui-icon-folder-collapsed"
+          primary: "ui-icon-person"
         },
         text: true,
         disabled: true
@@ -560,7 +543,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().saveSnaplapse();
       });
       // Create load button
-      editorModeToolbar.append('<button class="loadTimewarp" title="Load a time warp">Load</button>');
+      editorModeToolbar.append('<button class="loadTimewarp" title="Load a tour">Load</button>');
       $("#" + viewerDivId + " .loadTimewarp").button({
         icons: {
           primary: "ui-icon-folder-open"
@@ -570,7 +553,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         timelapse.getSnaplapse().getSnaplapseViewer().showLoadSnaplapseWindow();
       });
       // Create new button
-      editorModeToolbar.append('<button class="newTimewarp" title="Clear time warp">Clear</button>');
+      editorModeToolbar.append('<button class="newTimewarp" title="Remove all keyframes">Clear</button>');
       $("#" + viewerDivId + " .newTimewarp").button({
         icons: {
           primary: "ui-icon-trash"
@@ -584,17 +567,17 @@ if (!org.gigapan.timelapse.Timelapse) {
         handleEditorModeToolbarChange();
       });
       // Create global setting button
-      editorModeToolbar.append('<button class="setTimewarp" title="Global settings">Set</button>');
-      $("#" + viewerDivId + " .setTimewarp").button({
-        icons: {
-          primary: "ui-icon-wrench"
-        },
-        text: false
-      }).click(function() {
-        timelapse.getSnaplapse().getSnaplapseViewer().showSetSnaplapseWindow();
-      });
+      //editorModeToolbar.append('<button class="setTimewarp" title="Global settings">Set</button>');
+      //$("#" + viewerDivId + " .setTimewarp").button({
+      //  icons: {
+      //    primary: "ui-icon-wrench"
+      //  },
+      //  text: false
+      //}).click(function() {
+      //  timelapse.getSnaplapse().getSnaplapseViewer().showSetSnaplapseWindow();
+      //});
       // Create buttonset
-      editorModeToolbar.buttonset();
+      //editorModeToolbar.buttonset();
     };
 
     // Hide the area for editing the timewarp
@@ -660,16 +643,17 @@ if (!org.gigapan.timelapse.Timelapse) {
         disabled: true
       }).change(function() {
         var $hideAnnotationCheckbox = $("#" + viewerDivId + " .hideAnnotationCheckbox");
+        var $addAnnotationCheckbox = $("#" + viewerDivId + " .addAnnotationCheckbox");
         if ($hideAnnotationCheckbox.is(":checked")) {
           $hideAnnotationCheckbox.prop("checked", false).button("refresh").change();
         }
         if ($moveAnnotationCheckbox.is(":checked")) {
           annotator.setCanMoveAnnotation(true);
-          if (!$("#" + viewerDivId + " .addAnnotationCheckbox").is(":checked"))
+          if (!$addAnnotationCheckbox.is(":checked"))
             $hideAnnotationCheckbox.button("option", "disabled", true);
         } else {
           annotator.setCanMoveAnnotation(false);
-          if (!$("#" + viewerDivId + " .addAnnotationCheckbox").is(":checked"))
+          if (!$addAnnotationCheckbox.is(":checked"))
             $hideAnnotationCheckbox.button("option", "disabled", false);
         }
       });
@@ -744,10 +728,11 @@ if (!org.gigapan.timelapse.Timelapse) {
       var fullScreen = timelapse.isFullScreen();
       var smallGoogleMap = timelapse.getSmallGoogleMap();
       var enableSmallGoogleMap = timelapse.isSmallGoogleMapEnable();
+      var panoVideo, snaplapseViewer;
       if (visualizer)
-        var panoVideo = visualizer.getPanoVideo();
+        panoVideo = visualizer.getPanoVideo();
       if (snaplapse)
-        var snaplapseViewer = timelapse.getSnaplapse().getSnaplapseViewer();
+        snaplapseViewer = timelapse.getSnaplapse().getSnaplapseViewer();
 
       if (newMode == "player") {
         mode = newMode;
@@ -834,18 +819,19 @@ if (!org.gigapan.timelapse.Timelapse) {
       // Create menu and button
       var viewerModeBtnContainer = $("#" + viewerDivId + " .viewerModeBtnContainer");
       viewerModeBtnContainer.append('<button class="viewerModeBtn" title="Change viewer mode">Player</button>');
-      var viewerModeBtn = $("#" + viewerDivId + " .viewerModeBtn");
-      viewerModeBtn.attr("id", viewerDivId + "_viewerModeBtn");
-      viewerModeBtn.button({
+      var $viewerModeBtn = $("#" + viewerDivId + " .viewerModeBtn");
+      var $viewerModeOptions = $("#" + viewerDivId + " .viewerModeOptions");
+      $viewerModeBtn.attr("id", viewerDivId + "_viewerModeBtn");
+      $viewerModeBtn.button({
         icons: {
           primary: "ui-icon-gear"
         },
         text: true
       }).click(function() {
-        if ($("#" + viewerDivId + " .viewerModeOptions").is(":visible")) {
-          $("#" + viewerDivId + " .viewerModeOptions").hide();
+        if ($viewerModeOptions.is(":visible")) {
+          $viewerModeOptions.hide();
         } else {
-          $("#" + viewerDivId + " .viewerModeOptions").show().position({
+          $viewerModeOptions.show().position({
             my: "right bottom",
             at: "right top",
             of: this
@@ -853,21 +839,17 @@ if (!org.gigapan.timelapse.Timelapse) {
           $("#" + viewerDivId + " .playbackSpeedOptions").hide();
           $("#" + viewerDivId + " .sizeOptions").hide();
         }
-        //terrible hack
-        setTimeout(function() {
-          $(document).one("click", function(e) {
-            if (!$(e.target).closest("#" + viewerDivId + " .viewerModeBtn").length) {
-              $("#" + viewerDivId + " .viewerModeOptions").hide();
-            }
-          });
-        }, 200);
+        $(document).one("mouseup", function(e) {
+          if ($viewerModeBtn.has(e.target).length == 0)
+            $viewerModeOptions.hide();
+        });
       });
       $("#" + viewerDivId + " .viewerModeOptions").hide().menu();
 
       // Set the dropdown
       $("#" + viewerDivId + " .viewerModeOptions li a").bind("click", function() {
         var newMode = $(this).text();
-        $("#" + viewerDivId + " .viewerModeBtn").button("option", "label", newMode);
+        $viewerModeBtn.button("option", "label", newMode);
         if (newMode == "Editor") {
           setMode("editor");
         } else if (newMode == "Player") {
@@ -879,14 +861,14 @@ if (!org.gigapan.timelapse.Timelapse) {
     };
 
     var shareView = function() {
-      $("#" + viewerDivId + " .shareurl").val(window.location.href.split("#")[0] + timelapse.getShareView());
-      $("#" + viewerDivId + " .shareurl").focus(function() {
+      var $shareUrl = $("#" + viewerDivId + " .shareurl");
+      $shareUrl.val(
+        window.location.href.split("#")[0] + timelapse.getShareView()
+      ).focus(function() {
         $(this).select();
-      });
-      $("#" + viewerDivId + " .shareurl").click(function() {
+      }).click(function() {
         $(this).select();
-      });
-      $("#" + viewerDivId + " .shareurl").mouseup(function(e) {
+      }).mouseup(function(e) {
         e.preventDefault();
       });
       $("#" + viewerDivId + " .shareView").dialog("open");
@@ -895,20 +877,25 @@ if (!org.gigapan.timelapse.Timelapse) {
     function createPlaybackSpeedMenu() {
       // Populate playback speed dropdown (the function is in timelapseViewer.js)
       populateSpeedPlaybackChoices();
-      var speedChoice;
-      // Set the playback speed dropdown
-      $("#" + viewerDivId + " .playbackSpeedOptions li a").each(function() {
-        speedChoice = $(this);
-        if (speedChoice.attr("data-speed") == timelapse.getPlaybackRate()) {
-          timelapse.changePlaybackRate(speedChoice);
-          return false;
-        }
-      });
-      $("#" + viewerDivId + " .playbackSpeedOptions li a").bind("click", function() {
+
+      var $playbackSpeedOptionsSelection = $("#" + viewerDivId + " .playbackSpeedOptions li a");
+      $playbackSpeedOptionsSelection.bind("click", function() {
         timelapse.changePlaybackRate(this);
       });
       $("#" + viewerDivId + " .playbackSpeedOptions").hide().menu();
-      return speedChoice.text();
+
+      timelapse.addPlaybackRateChangeListener(function(rate, fromUI) {
+        var speedChoice;
+        // Set the playback speed dropdown
+        var $playbackSpeedOptionsSelection = $("#" + viewerDivId + " .playbackSpeedOptions li a");
+        $playbackSpeedOptionsSelection.each(function() {
+          speedChoice = $(this);
+          if (speedChoice.attr("data-speed") == rate) {
+            return false;
+          }
+        });
+        $("#" + viewerDivId + " .playbackSpeed span").text(speedChoice.text());
+      });
     }
 
     function populateSpeedPlaybackChoices() {
@@ -916,16 +903,16 @@ if (!org.gigapan.timelapse.Timelapse) {
 
       // Only show backward playback options for non-split video datasets
       // Backward playback - emulated since Chrome/Safari doesn't properly handle it
-      if ( typeof (timelapse.getDatasetJSON()['frames_per_fragment']) == "undefined") {
+      if ( typeof (timelapse.getDatasetJSON()["frames_per_fragment"]) == "undefined") {
         choices.push({
           "name": "Backward, Full Speed",
           "value": -1.0
         }, {
-          "name": "Backward, &#188; Speed",
-          "value": -0.25
-        }, {
           "name": "Backward, &#189; Speed",
           "value": -0.5
+        }, {
+          "name": "Backward, &#188; Speed",
+          "value": -0.25
         });
       }
 
@@ -951,18 +938,18 @@ if (!org.gigapan.timelapse.Timelapse) {
     function doHelpOverlay() {
       $("#" + viewerDivId + " .instructions").fadeIn(200);
 
-      if ($("#" + viewerDivId + " .playbackButton").hasClass('pause')) {
+      if ($playbackButton.hasClass('pause')) {
         timelapse.handlePlayPause();
-        $("#" + viewerDivId + " .playbackButton").removeClass("pause").addClass("play from_help");
+        $playbackButton.removeClass("pause").addClass("play from_help");
       }
     }
 
     function removeHelpOverlay() {
       $("#" + viewerDivId + " .instructions").fadeOut(200);
 
-      if ($("#" + viewerDivId + " .playbackButton").hasClass('from_help')) {
+      if ($playbackButton.hasClass('from_help')) {
         timelapse.handlePlayPause();
-        $("#" + viewerDivId + " .playbackButton").addClass("pause").removeClass("play from_help");
+        $playbackButton.addClass("pause").removeClass("play from_help");
       }
     }
 
@@ -985,7 +972,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       var numLayers = tmJSON["layers"].length;
       var html = "";
       for (var i = 0; i < numLayers; i++) {
-        html += "<li data-index=" + i + "><img src=\"" + tmJSON["layers"][i]["tn-path"] + "\" " + "alt='layer' width='45' height='45' ><br/><span style='font-size:small; text-align:center; display:block; margin: -5px 0px 0px 0px !important;'>" + tmJSON['layers'][i]['description'] + "</span></li>";
+        html += "<li data-index=" + i + "><img src=\"" + tmJSON["layers"][i]["tn-path"] + "\" " + "alt='layer' width='45' height='45' ><br/><span style='font-size:small; text-align:center; display:block; margin: -5px 0px 0px 0px !important;'>" + tmJSON["layers"][i]["description"] + "</span></li>";
       }
       $("#" + viewerDivId + " .layerChoices").append(html);
 
@@ -1101,8 +1088,9 @@ if (!org.gigapan.timelapse.Timelapse) {
     this.handleEditorModeToolbarChange = handleEditorModeToolbarChange;
 
     var handleFullScreenChange = function(fullScreen) {
+      var panoVideo;
       if (visualizer)
-        var panoVideo = visualizer.getPanoVideo();
+        panoVideo = visualizer.getPanoVideo();
       if (fullScreen) {
         if (mode == "editor") {
           hideEditorArea();
@@ -1189,7 +1177,6 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     // Constructor code
     //
-    createSubtitle();
     createTimelineSlider();
     createToolbar();
     if (!showZoomControls) {

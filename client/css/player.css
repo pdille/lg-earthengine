@@ -31,9 +31,13 @@ body, html {
 }
 
 .snaplapsePlayingMask {
-  position: fixed;
-  opacity: 0;
+  position: absolute;
+  opacity: 0.01;
+  width: 100%;
+  height: 100%;
   z-index: 19;
+  top: 0px;
+  background: white;
 }
 
 .playStopTimewarp {
@@ -47,7 +51,6 @@ body, html {
   position: fixed;
   right: 0;
   top: 0;
-  cursor: wait !important;
   z-index: 999;
 }
 
@@ -616,14 +619,6 @@ body, html {
   border-top: 0px solid #838383;
 }
 
-.shareText {
-  color: black;
-}
-
-.playbackSpeedText {
-  color: black;
-}
-
 .timeSliderColorBot_div_playerMode {
   opacity: 0.6;
   position: absolute;
@@ -677,59 +672,22 @@ body, html {
 }
 
 .timelineSlider .ui-slider-handle {
-  width: 11px;
+  width: 9px;
   margin-left: -5px !important;
-  height: 19px;
-  background: url(../images/handle.png) no-repeat;
+  height: 17px;
   overflow: hidden;
   top: -6px;
   border-style: none;
   border: none;
-  margin: 0px 0px 0px 0px;
+  margin: 0px;
   z-index: 5;
+  border: 1px solid #656565;
+  border-radius: 2px !important;
 }
 
 .ui-slider-range {
   background: #ffffff;
   opacity: 0.8;
-}
-
-.timelineSlider .ui-slider-handle:hover {
-  background-image: url(../images/handle_hover.png);
-}
-.timelineSlider .ui-slider-handle:active {
-  background-image: url(../images/handle_down.png);
-}
-
-.snaplapse-annotation-description {
-  display: table;
-  overflow: hidden;
-  border: 0px solid #000000;
-  position: absolute;
-  width: 100%;
-  height: 65px;
-  bottom: 10px;
-  left: 0px;
-  color: #ffffff;
-  background-color: rgba(0,0,0,0);
-  z-index: 10;
-  word-wrap: break-word;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.snaplapse-annotation-description div {
-  display: table-cell;
-  font-family: Arial, Helvetica, sans-serif;
-  padding-left: 20%;
-  padding-right: 20%;
-  width: 60%;
-  height: 100%;
-  text-align: center;
-  font-size: 14pt;
-  word-wrap: break-word;
-  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
-  vertical-align: middle;
 }
 
 .carousel {
@@ -787,63 +745,10 @@ body, html {
   cursor: pointer;
 }
 
-.play_mouseover {
-  width: 20px;
-  height: 23px;
-  background-image: url("../images/play_mouseover.png");
-  cursor: pointer;
-  float: left;
-}
-
-.play_mouseout {
-  width: 20px;
-  height: 23px;
-  background-image: url("../images/play_mouseout.png");
-  cursor: pointer;
-  float: left;
-}
-
-.pause_mouseover {
-  width: 20px;
-  height: 23px;
-  background-image: url("../images/pause_mouseover.png");
-  cursor: pointer;
-  float: left;
-}
-
-.pause_mouseout {
-  width: 20px;
-  height: 23px;
-  background-image: url("../images/pause_mouseout.png");
-  cursor: pointer;
-  float: left;
-}
-
 .shareurl {
   width: 600px;
   height: 32px;
-}
-
-a.share {
-  padding: 8px 0px 0px 0px;
-  position: absolute;
-  margin: 6px 0px 0px 0px;
-  width: 50px;
-  height: 21px;
-  right: 298px;
-  text-align: center;
-  text-indent: 0px;
-  background-repeat: no-repeat;
-  background-position: top left;
-  background-image: url("../images/buttons/share.png");
-}
-
-a.share:hover {
-  background-image: url("../images/buttons/share_hover.png");
-}
-
-a.share:active {
-  background-image: url("../images/buttons/share_down.png");
+  resize: none;
 }
 
 .spinnerOverlay {

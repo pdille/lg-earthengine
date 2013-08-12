@@ -84,8 +84,8 @@
 
 .videoQualityContainer {
   position: absolute;
-  width: 400px;
-  height: 43px;
+  width: 325px;
+  height: 23px;
   z-index: 10;
   border: 0px solid #000000;
   background-color: rgba(0,0,0,0);
