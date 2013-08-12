@@ -1418,7 +1418,7 @@ if (!window['$']) {
  
 	  var gamepad = navigator.webkitGetGamepads()[0];
 	  var translationSpeedConstant = 30;
-	  var joystickError = 0.08;
+	  var joystickError = 0.15;
 	  var scalingConstant = 0.94;
 	  var secondaryFunctionsEnabled = true;
 	  var timeSpeedConstant = timelapseDurationInSeconds/400.0;
@@ -1438,12 +1438,12 @@ if (!window['$']) {
       }
       
       // Zooming in/out
-      if(gamepad.axes[4] > joystickError) {
-	  	view.scale = limitScale(view.scale*(scalingConstant + (1-scalingConstant)*(1-gamepad.axes[4])));
+      if(gamepad.axes[3] > joystickError) {
+	  	view.scale = limitScale(view.scale*(scalingConstant + (1-scalingConstant)*(1-gamepad.axes[3])));
 	  	targetView = view;
       }
-      else if(gamepad.axes[4] < -joystickError) {
-      	view.scale = limitScale(view.scale/(scalingConstant + (1-scalingConstant)*(1+gamepad.axes[4])));
+      else if(gamepad.axes[3] < -joystickError) {
+      	view.scale = limitScale(view.scale/(scalingConstant + (1-scalingConstant)*(1+gamepad.axes[3])));
       	targetView = view;
       }
       refresh();
@@ -1793,10 +1793,12 @@ if (!window['$']) {
         if (tmJSON['projection-bounds'])
           var videoViewer_projection = _getProjection();
         // get video viewer center location
-        var scale = view.scale;
+        // TODO: get master view
+		if (!masterView) masterView = timelapse.getView();
+		var scale = masterView.scale;
         var videoViewer_centerPoint = {
-          "x": view.x,
-          "y": view.y,
+          "x": masterView.x,
+          "y": masterView.y,
           "scale": scale
         };
         if (videoViewer_projection) {
@@ -1807,8 +1809,8 @@ if (!window['$']) {
         if (scaleBar) {
           // compute the the distance between two center pixels
           var videoViewer_nearCenterPoint = {
-            "x": (view.x + 1 / scale),
-            "y": view.y,
+            "x": (masterView.x + 1 / scale),
+            "y": masterView.y,
             "scale": scale
           };
           if (videoViewer_projection) {
@@ -1823,15 +1825,16 @@ if (!window['$']) {
           var offsetX = (viewportWidth / 2) / scale;
           var offsetY = (viewportHeight / 2) / scale;
           var videoViewer_leftTopPoint = {
-            "x": (view.x - offsetX),
-            "y": (view.y - offsetY),
+            "x": (masterView.x - offsetX),
+            "y": (masterView.y - offsetY),
             "scale": scale
           };
           var videoViewer_rightBotPoint = {
-            "x": (view.x + offsetX),
-            "y": (view.y + offsetY),
+            "x": (masterView.x + offsetX),
+            "y": (masterView.y + offsetY),
             "scale": scale
           };
+
           if (videoViewer_projection) {
             var tagLatLngNE_nav = videoViewer_projection.pointToLatlng(videoViewer_leftTopPoint);
             var tagLatLngSW_nav = videoViewer_projection.pointToLatlng(videoViewer_rightBotPoint);
@@ -1983,6 +1986,7 @@ if (!window['$']) {
       //var shardIndex = (getTileidxRow(tileidx) % 2) * 2 + (getTileidxColumn(tileidx) % 2);
       //var urlPrefix = url.replace("//", "//t" + shardIndex + ".");
       var fragmentSpecifier = isSplitVideo ? "_" + videoset.getFragment(videoset.getCurrentTime()) : "";
+      //console.log(datasetPath);
       var videoURL = datasetPath + getTileidxLevel(tileidx) + "/" + getTileidxRow(tileidx) + "/" + getTileidxColumn(tileidx) + fragmentSpecifier + mediaType;
       //return ( isIE9 ? videoURL + "?time=" + new Date().getTime() : videoURL);
       return videoURL;
@@ -2211,7 +2215,7 @@ if (!window['$']) {
       _addViewChangeListener(function(view) {
         if (annotator)
           annotator.updateAnnotationPositions();
-        updateTagInfo_locationData();
+        //updateTagInfo_locationData();
       });
 
       _addVideoPauseListener(function() {
@@ -2296,7 +2300,7 @@ if (!window['$']) {
           if ( typeof (onTimeMachinePlayerReady) === "function") {
             onTimeMachinePlayerReady(viewerDivId);
           }
-          updateTagInfo_locationData();
+          //updateTagInfo_locationData();
           updateTagInfo_timeData();
         }
       });
@@ -2322,9 +2326,10 @@ if (!window['$']) {
       if (settings["scaleBarOptions"] && tmJSON['projection-bounds'])
         scaleBar = new org.gigapan.timelapse.ScaleBar(settings["scaleBarOptions"], thisObj);
       //must be placed after TimelineSlider is created
-      if (settings["smallGoogleMapOptions"] && tmJSON['projection-bounds'])
-        smallGoogleMap = new org.gigapan.timelapse.SmallGoogleMap(settings["smallGoogleMapOptions"], thisObj);
-
+	  if (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) {
+		if (settings["smallGoogleMapOptions"] && tmJSON['projection-bounds'])
+			smallGoogleMap = new org.gigapan.timelapse.SmallGoogleMap(settings["smallGoogleMapOptions"], thisObj);
+	  }
       // Fixes Safari bug which causes the video to not be displayed if the video has no leader and the initial
       // time is zero (the video seeked event is never fired, so videoset never gets the cue that the video
       // should be displayed).  The fix is to simply seek half a frame in.  Yeah, the video won't be starting at

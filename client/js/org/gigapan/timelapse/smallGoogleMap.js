@@ -94,8 +94,8 @@ if (!org.gigapan.timelapse.Timelapse) {
     //
     var minHeight = 120;
     var minWidth = 160;
-    var maxHeight = 220;
-    var maxWidth = 330;
+    var maxHeight = 768;
+    var maxWidth = 1024;
     var startWidth = minWidth;
     var startHeight = minHeight;
     var smallGoogleMapDivId = ( typeof (smallGoogleMapOptions["smallGoogleMapDiv"]) == "undefined") ? "smallGoogleMap2013" : smallGoogleMapOptions["smallGoogleMapDiv"];
@@ -247,7 +247,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       //draw the rectangle bounding box on the map
       var defaultLatLng_leftTop = new google.maps.LatLng(0, 0, true);
       var defaultLatLng_rightBot = new google.maps.LatLng(0, 0, true);
-      googleMapBox = new google.maps.Rectangle({
+      /*googleMapBox = new google.maps.Rectangle({
         strokeColor: "rgb(219,48,48)",
         strokeOpacity: mapBoxStrokeOpacity,
         strokeWeight: 1,
@@ -255,7 +255,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         fillOpacity: mapBoxFillOpacity,
         map: googleMap,
         bounds: new google.maps.LatLngBounds(defaultLatLng_leftTop, defaultLatLng_rightBot)
-      });
+      });*/
       //add event listeners for the small google map
       //google.maps.event.addListener(googleMap, 'center_changed', timelapse.updateLocation);
       $(smallMapContainer).mousewheel(function(event, delta) {
@@ -350,7 +350,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         var googleMapZoom = googleMap.getZoom();
         var maxViewerZoom = timelapse.scaleToZoom(timelapse.getMaxScale());
         oldGoogleMapZoom = googleMapZoom;
-        //TODO: not sure why we need to add 1...
+        // Google maps starts counting its zoom level at 1, so we need to add 1
         zoomOffset = googleMapZoom - maxViewerZoom + 1;
         //zoom back to the initial view
         timelapse.updateTagInfo_locationData();
@@ -561,11 +561,22 @@ if (!org.gigapan.timelapse.Timelapse) {
           extendRatio *= -0.5
         var googleMapLatlngCenter = new google.maps.LatLng(tagLatLngCenter.lat, tagLatLngCenter.lng);
         googleMap.setCenter(googleMapLatlngCenter);
+		// corrected zooming for hyperwall usage
         var newZoom = Math.floor((timelapse.scaleToZoom(viewerScale) + zoomOffset) + extendRatio);
         if (oldGoogleMapZoom != newZoom) {
           oldGoogleMapZoom = newZoom;
           googleMap.setZoom(newZoom);
         }
+		
+		// Offset for hyperwall
+		/*var bounds = googleMap.getBounds();
+		var curCenter = googleMap.getCenter();
+		var newCenter = new google.maps.LatLng(curCenter.lat() + fields.pitchOffset*(bounds.getNorthEast().lat() - bounds.getSouthWest().lat()),
+											   curCenter.lng() + -1*fields.yawOffset*(bounds.getNorthEast().lng() - bounds.getSouthWest().lng()));
+		console.log(curCenter);
+		console.log("setting new center");									   
+		googleMap.setCenter(newCenter);*/
+		
       }
     };
     this.setSmallGoogleMap = setSmallGoogleMap;
@@ -574,7 +585,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var setSmallMapBoxLocation = function(tagLatLngNE, tagLatLngSW) {
       var boxLatLngNE_googleMap = new google.maps.LatLng(tagLatLngNE.lat, tagLatLngNE.lng, true);
       var boxLatLngSW_googleMap = new google.maps.LatLng(tagLatLngSW.lat, tagLatLngSW.lng, true);
-      googleMapBox.setBounds(new google.maps.LatLngBounds(boxLatLngNE_googleMap, boxLatLngSW_googleMap));
+      //googleMapBox.setBounds(new google.maps.LatLngBounds(boxLatLngNE_googleMap, boxLatLngSW_googleMap));
     };
     this.setSmallMapBoxLocation = setSmallMapBoxLocation;
 
@@ -588,7 +599,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         fillColor: boxColor,
         fillOpacity: mapBoxFillOpacity
       };
-      googleMapBox.setOptions(boxOption);
+      //googleMapBox.setOptions(boxOption);
     };
     this.drawSmallMapBoxColor = drawSmallMapBoxColor;
 

@@ -10,6 +10,7 @@ var screensRight = (fields.screensRight) ? fields.screensRight : 0;
 var screensUp = (fields.screensUp) ? fields.screensUp : 0;
 var screensDown = (fields.screensDown) ? fields.screensDown : 0;
 var viewsync = io.connect('/viewsync');
+var masterView;
 
 viewsync.on('connect', function() {
   console.log('viewsync connected');
@@ -36,13 +37,14 @@ function viewsync_init() {
       //console.log( 'video length: ' + get_video_length() + ' seconds' );
 
       var metadata = timelapse.getMetadata();
-
+	  masterView = timelapse.getView();
       //console.log( 'dimensions: ' + metadata.width + ' x ' + metadata.height );
 
       timelapse.addViewChangeListener( function() {
 
         // correct scale extents before checking x/y
         var view = timelapse.getView();
+		masterView = view;
         /*if ( view.scale < MIN_SCALE ) {
           view.scale = MIN_SCALE;
           timelapse.setNewView( view, true );
@@ -94,7 +96,13 @@ function viewsync_init() {
         }
 
         //console.log( bbox );
-        viewsync.emit( 'view', bbox );
+		
+		if (controlsOnMaster) {
+		  console.log('master');
+		  timelapse.updateTagInfo_locationData();
+		}
+
+        viewsync.emit( 'view', {"bbox": bbox, "view": view} );
       });
       timelapse.addTimeChangeListener( function() {
         viewsync_send_time( false );
@@ -121,16 +129,24 @@ function viewsync_init() {
       //             + ' y: ' + data.ymin + '-' + data.ymax
       //             + ' scale: ' + data.scale
       //           );
-      var xoffset = ( data.xmax - data.xmin ) * yawOffset;
-      var yoffset = ( data.ymax - data.ymin ) * pitchOffset;
+	  masterView = data.view;
+      var xoffset = ( data.bbox.xmax - data.bbox.xmin ) * yawOffset;
+      var yoffset = ( data.bbox.ymax - data.bbox.ymin ) * pitchOffset;
       var adjusted = {
         bbox: {
-          xmin: data.xmin + xoffset,
-          xmax: data.xmax + xoffset,
-          ymin: data.ymin + yoffset,
-          ymax: data.ymax + yoffset
+          xmin: data.bbox.xmin + xoffset,
+          xmax: data.bbox.xmax + xoffset,
+          ymin: data.bbox.ymin + yoffset,
+          ymax: data.bbox.ymax + yoffset
         }
       };
+	  
+	  if (!controlsOnMaster) {
+		  if ( (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) || 
+			   (!fields.yawOffset && fields.pitchOffset == fields.screensBottom) ) {
+			timelapse.updateTagInfo_locationData();
+		  }
+      }
       timelapse.setNewView( adjusted, true );
     });
     viewsync.on('sync time', function (data) {

@@ -278,7 +278,7 @@ if (!org.gigapan.timelapse.Timelapse) {
       $customTimeline = $(customTimeline);
       $customControl.append(timeText, customTimeline);
       sliderLeftMargin = $customPlay.width() + $timeText.width() + 30;
-      sliderRightMargin = $customHelpLabel.width() + 35;
+      sliderRightMargin = $customHelpLabel.width() + 5 + (controlsOnMaster * 20);
       var width_slider = (playerWidth - sliderLeftMargin - sliderRightMargin);
       $customTimeline.css({
         "left": sliderLeftMargin + "px",

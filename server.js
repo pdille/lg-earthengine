@@ -63,6 +63,8 @@ var controller = io
 .of('/controller')
 .on('connection', function (socket) {
     bounce( socket, 'setLocation' );
+    bounce( socket, 'mapViewUpdate' );
+    bounce( socket, 'mapZoomTo' );
     });
 
 //
