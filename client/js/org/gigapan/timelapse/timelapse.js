@@ -2430,7 +2430,7 @@ if (!window['$']) {
         scaleBar = new org.gigapan.timelapse.ScaleBar(settings["scaleBarOptions"], thisObj);
 
       // Must be placed after TimelineSlider is created
-      if (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) {
+      if (fields.yawOffset == fields.screensRight && fields.pitchOffset == fields.screensBottom) {
         if (settings["smallGoogleMapOptions"] && tmJSON['projection-bounds'])
         smallGoogleMap = new org.gigapan.timelapse.SmallGoogleMap(settings["smallGoogleMapOptions"], thisObj);
       }

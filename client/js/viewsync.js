@@ -140,7 +140,7 @@ function viewsync_init() {
         }
       };
 	  
-	  if ( (fields.yawOffset == fields.screensRight && fields.pitchOffset == -1*fields.screensTop) || 
+	  if ( (fields.yawOffset == fields.screensRight && fields.pitchOffset == fields.screensBottom) || 
 		   (!fields.yawOffset && fields.pitchOffset == fields.screensBottom) ) {
 		timelapse.updateTagInfo_locationData();
 	  }

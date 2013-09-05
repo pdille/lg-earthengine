@@ -92,13 +92,13 @@ if (!org.gigapan.timelapse.Timelapse) {
 //
 (function() {
   org.gigapan.timelapse.SmallGoogleMap = function(smallGoogleMapOptions, timelapse) {
-
+ 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     // Class variables
     //
-    var minHeight = 120;
-    var minWidth = 160;
+    var minHeight = 450;
+    var minWidth = 500;
     var maxHeight = 768;
     var maxWidth = 1024;
     var startWidth = minWidth;
@@ -447,7 +447,7 @@ if (!org.gigapan.timelapse.Timelapse) {
         setSmallMapShadow(true);
       }
       $smallMapContainer.css({
-        "top": mapGeometry.top + "px",
+        "bottom": mapGeometry.top + "px",
         "right": mapGeometry.right + "px",
         "width": mapGeometry.width + "px",
         "height": mapGeometry.height + "px"
