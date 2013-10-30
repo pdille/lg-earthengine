@@ -52,7 +52,7 @@
 			jQuery.support.cors = true;
 			var controlsOnMaster = false;
 			//landsat
-			var url = "http://earthengine.google.org/timelapse/data";
+			var url = "http://earthengine.google.org/timelapse/data/20130507";
 			//var url = "http://g7.gigapan.org/timemachines/earthtime-offline/dfw_1080p_mp4/";
 			//var url = "dfw_1080p/dfw_1080p_mp4/";
 			//var url = "../patp10-480p.timemachine/";
@@ -112,7 +112,7 @@
 					loopPlayback: true, //defaults to false
 					initialView: myView, //see above for possible views to use
 					playOnLoad: true, //defaults to false
-					playbackSpeed: 1, //[-1,-.5,-.25,.25,.5,1] available, defaults to 1
+					playbackSpeed: 0.5, //[-1,-.5,-.25,.25,.5,1] available, defaults to 1
 					//layer: 0, //defaults to first layer. All sets have at least 1 layer starting at index 0
 					//showShareBtn: false, //defaults to true
 					//showFullScreenBtn: false, //display the fullscreen button or not, defaults to true
