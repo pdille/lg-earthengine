@@ -9,7 +9,7 @@ var DEBUG = true;
 // listen on this port for all http, socket.io, and multi-axis requests
 var viewsyncPort = 8080;
 // serve http from this path
-var clientroot = path.join(__dirname, 'client');
+var clientroot = path.join(__dirname, 'time-machine-explorer');
 
 //
 // start up the HTTP server
@@ -65,6 +65,9 @@ var controller = io
     bounce( socket, 'setLocation' );
     bounce( socket, 'mapViewUpdate' );
     bounce( socket, 'mapZoomTo' );
+    bounce( socket, 'playTour' );
+    bounce( socket, 'decodeTour' );
+    bounce( socket, 'returnTour' );
     });
 
 //
