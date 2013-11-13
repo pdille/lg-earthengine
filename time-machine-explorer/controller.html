@@ -129,6 +129,7 @@
         var tourFragment = locationElem.attr("data-tourFragment");
         if (tourFragment) {
           controller.emit("playTour", tourFragment);
+          Android
           // Prevent overclicking with a timeout.
           // Would be best to detect when the final action actuallycompletes though.
           setTimeout(function() {
@@ -145,6 +146,8 @@
         var centerView = locationElem.attr("data-centerView");
         if (centerView) {
           controller.emit("setLocation", centerView);
+          // Set the location of android object
+          androidObject.setMapLocation(centerView);
           // Prevent overclicking with a timeout.
           // Would be best to detect when the final action actuallycompletes though.
           setTimeout(function() {

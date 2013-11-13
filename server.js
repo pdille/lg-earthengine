@@ -68,6 +68,8 @@ var controller = io
     bounce( socket, 'playTour' );
     bounce( socket, 'decodeTour' );
     bounce( socket, 'returnTour' );
+    bounce( socket, 'play' );
+    bounce( socket, 'pause' );
     });
 
 //
