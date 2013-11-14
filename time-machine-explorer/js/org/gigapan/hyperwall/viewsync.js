@@ -156,7 +156,9 @@ function viewsync_init() {
       //var diff = timelapse.getCurrentTime() - data.time;
       //if( Math.abs( diff ) > MAX_TIME_DIFF || data.absolute ) {
       //console.log( 'out of sync by ' + diff + '! seeking..' );
-      timelapse.seek(data.time);
+      // TODO(rsargent): hacked to not seek during play
+      //timelapse.seek(data.time);
+      if (data.time == 0 || timelapse.isPaused()) timelapse.seek(data.time);
       //}
     });
     viewsync.on('sync play', function(data) {
