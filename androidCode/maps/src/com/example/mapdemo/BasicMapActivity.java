@@ -36,7 +36,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -61,18 +63,22 @@ public class BasicMapActivity extends FragmentActivity {
      * Note that this may be null if the Google Play services APK is not available.
      */
     private GoogleMap mMap;
-    private float maxZoom = 13.5f;
+    private float maxZoom = 10.5f;
     private SocketIO socket = null;
     boolean isGridVisible = false;
     String controllerURL;
-    private boolean isMapTimedUpdate = false;
-    private int mapUpdateTime = 200;
+    String locationDataFromControllerHTML; 
+    private boolean isMapTimedUpdate = true;
+    private int mapUpdateTime = 10;
+    private int setViewGracefullyTime = 5000;
+    private Handler mapUpdateHandler = new Handler();
+    private boolean isPlayingTimeMachine = true;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.basic_demo);
-        setUpMapIfNeeded();
+        //setUpMapIfNeeded();
         
         // Setup the socket connection
         createDialog();
@@ -83,7 +89,7 @@ public class BasicMapActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
+        //setUpMapIfNeeded();
     }
     
     private void createDialog () {
@@ -108,6 +114,7 @@ public class BasicMapActivity extends FragmentActivity {
                 WebView fixedLocations = (WebView) findViewById(R.id.webview);
             	fixedLocations.loadUrl(controllerURL);
             	fixedLocations.addJavascriptInterface(this, "Android");
+            	setUpMapIfNeeded();
             }
         });
     	builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -214,15 +221,13 @@ public class BasicMapActivity extends FragmentActivity {
     		     * Listener for camera change event it should send the new data to the node server somehow 
     		     */
     			public void onCameraChange(CameraPosition position) {
-    				if(!isGridVisible) {
-    					if(socket != null) {
-    						socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom));
-    						// Limit the max zoom
-    						if(position.zoom > maxZoom) {
-    							mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
-    						}
+    				if(socket != null) {
+    					socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom+1.5f));
+    					// Limit the max zoom
+    					if(position.zoom > maxZoom) {
+    						mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
     					}
-    				}				
+    				}
     			}
     		};
     		mMap.setOnCameraChangeListener(listener);
@@ -233,16 +238,19 @@ public class BasicMapActivity extends FragmentActivity {
     		updateMapTimer.schedule(new TimerTask () {
     			@Override
     			public void run () {
-    				if(!isGridVisible) {
-    					if(socket != null) {
-    						CameraPosition position = mMap.getCameraPosition();
-    						socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom));
-    						// Limit the max zoom
-    						if(position.zoom > maxZoom) {
-    							mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
-    						}
+    				mapUpdateHandler.post(new Runnable() {
+    					public void run () {
+    						if(socket != null && isMapTimedUpdate) {
+        						CameraPosition position = mMap.getCameraPosition();
+        						socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom+1.5f));
+        						// Limit the max zoom
+        						if(position.zoom > maxZoom) {
+        							mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
+        						}
+        					}            				
     					}
-    				}		
+    				});
+    						
     			}
     		}, mapUpdateTime, mapUpdateTime);
         }
@@ -261,6 +269,29 @@ public class BasicMapActivity extends FragmentActivity {
     	final WebView fixedLocations = (WebView) findViewById(R.id.webview);
     	WebSettings webSettings = fixedLocations.getSettings();
     	webSettings.setJavaScriptEnabled(true);
+    	fixedLocations.addJavascriptInterface(this, "androidObject");
+    	
+    	final ImageButton playPause = (ImageButton) findViewById(R.id.playPauseButton);
+    	playPause.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// Switch the button and send a play or a pause signal
+				if(isPlayingTimeMachine) {
+					Drawable playImage = getResources().getDrawable(R.drawable.play);
+					playPause.setImageDrawable(playImage);
+					isPlayingTimeMachine = false;
+					socket.emit("pause");
+				}
+				else {
+					Drawable pauseImage = getResources().getDrawable(R.drawable.pause);
+					playPause.setImageDrawable(pauseImage);
+					isPlayingTimeMachine = true;
+					socket.emit("play");
+				}
+				 
+			}
+		});
     	//fixedLocations.setVisibility(View.INVISIBLE);
     	/*
     	// Create an animation for grid view
@@ -334,10 +365,26 @@ public class BasicMapActivity extends FragmentActivity {
     
     @JavascriptInterface
     public void setMapLocation (String data) {
-    	String location[] = data.split(",");
+    	locationDataFromControllerHTML = data;
+    	isMapTimedUpdate = false;
+    	// Create a timer to set it to true
+    	Timer t = new Timer();
+    	t.schedule(new TimerTask() {
+
+    	            @Override
+    	            public void run() {
+    	            	isMapTimedUpdate = true;
+       	            }
+    	        }, setViewGracefullyTime);
 		
 		// Set the location of the map to this position
-		mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(location[0]),Double.parseDouble(location[1])), Float.parseFloat(location[2])), 4000, null);
+    	mapUpdateHandler.post(new Runnable() {
+			public void run () {
+				String location[] = locationDataFromControllerHTML.split(",");
+				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(location[0]),Double.parseDouble(location[1])), Float.parseFloat(location[2]) - 1.5f), setViewGracefullyTime, null);
+			}
+		});
+		
     }
     
 }

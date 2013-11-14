@@ -47,8 +47,8 @@
 
 	<GridLayout
 	    android:id="@+id/placesView"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
+	    android:layout_width="81dp"
+	    android:layout_height="73dp"
 	    android:background="@color/translucentWhite"
 	    android:columnCount="4"
 	    android:orientation="vertical" >
@@ -266,5 +266,16 @@
 	        android:textColor="@color/black"
 	        android:textSize="20sp" />
 	</GridLayout>
+
+	<ImageButton
+	    android:id="@+id/playPauseButton"
+	    android:layout_width="100dp"
+	    android:layout_height="100dp"
+	    android:layout_gravity="bottom"
+	    android:layout_marginBottom="165dp"
+	    android:layout_marginLeft="5dp"
+	    android:background="@android:color/transparent"
+	    android:contentDescription="@string/explore"
+	    android:src="@drawable/pause" />
 	
 </FrameLayout>
