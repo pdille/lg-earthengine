@@ -80,7 +80,7 @@ if (fields.master) {
     timelapse.play();
   });
 
-  controlReciever.on('sync play', function(data) {
+  controlReciever.on('sync pause', function(data) {
     timelapse.pause();
   });
 }

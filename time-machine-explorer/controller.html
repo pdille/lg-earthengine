@@ -147,7 +147,9 @@
         if (centerView) {
           controller.emit("setLocation", centerView);
           // Set the location of android object
-          androidObject.setMapLocation(centerView);
+          var viewObj = JSON.parse(centerView);
+          var viewForAndroid = viewObj.center.lat+','+viewObj.center.lng+','+viewObj.center.zoom;
+          androidObject.setMapLocation();
           // Prevent overclicking with a timeout.
           // Would be best to detect when the final action actuallycompletes though.
           setTimeout(function() {
