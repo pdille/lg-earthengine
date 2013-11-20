@@ -1220,10 +1220,13 @@ if (!Math.uuid) {
             } else if (desiredDuration < actualDuration / 100) {
               // Set a threshold for the smallest duration
               // so we don't get extremely high speeds like 9999999%
-              desiredDuration = actualDuration / 100;
+              //desiredDuration = actualDuration / 100;
+              desiredDuration = 0;
             }
-            playbackRate = actualDuration / desiredDuration;
-            desiredSpeed = playbackRate * 100;
+            //playbackRate = actualDuration / desiredDuration;
+            //desiredSpeed = playbackRate * 100;
+            playbackRate = (desiredDuration == 0) ? 0 : actualDuration / desiredDuration;
+            desiredSpeed = (desiredDuration == 0) ? 10000 : playbackRate * 100;
           }
         } else {
           desiredSpeed = 0;
