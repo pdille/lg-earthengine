@@ -188,14 +188,18 @@ containing a value of this type.
         public static final int glacier=0x7f020022;
         public static final int grid=0x7f020023;
         public static final int ic_launcher=0x7f020024;
-        public static final int newark_nj_1922=0x7f020025;
-        public static final int pause=0x7f020026;
-        public static final int play=0x7f020027;
-        public static final int saudi=0x7f020028;
-        public static final int tour_play_outline=0x7f020029;
-        public static final int urmia=0x7f02002a;
-        public static final int vegas=0x7f02002b;
-        public static final int wyoming=0x7f02002c;
+        public static final int ic_plusone_medium_off_client=0x7f020025;
+        public static final int ic_plusone_small_off_client=0x7f020026;
+        public static final int ic_plusone_standard_off_client=0x7f020027;
+        public static final int ic_plusone_tall_off_client=0x7f020028;
+        public static final int newark_nj_1922=0x7f020029;
+        public static final int pause=0x7f02002a;
+        public static final int play=0x7f02002b;
+        public static final int saudi=0x7f02002c;
+        public static final int tour_play_outline=0x7f02002d;
+        public static final int urmia=0x7f02002e;
+        public static final int vegas=0x7f02002f;
+        public static final int wyoming=0x7f020030;
     }
     public static final class id {
         public static final int alphaSeekBar=0x7f050027;
@@ -302,41 +306,41 @@ containing a value of this type.
         public static final int activity_main=0x7f080000;
     }
     public static final class string {
-        public static final int alpha=0x7f060015;
-        public static final int animate=0x7f060016;
-        public static final int aral=0x7f06006e;
+        public static final int alpha=0x7f060019;
+        public static final int animate=0x7f06001a;
+        public static final int aral=0x7f060072;
         /**   Title for notification shown when GooglePlayServices needs to be
         enabled for a application to work. [CHAR LIMIT=70] 
          */
-        public static final int auth_client_needs_enabling_title=0x7f060010;
+        public static final int auth_client_needs_enabling_title=0x7f060014;
         /**   Title for notification shown when GooglePlayServices needs to be
         installed for a application to work. [CHAR LIMIT=70] 
          */
-        public static final int auth_client_needs_installation_title=0x7f060011;
+        public static final int auth_client_needs_installation_title=0x7f060015;
         /**   Title for notification shown when GooglePlayServices needs to be
         udpated for a application to work. [CHAR LIMIT=70] 
          */
-        public static final int auth_client_needs_update_title=0x7f060012;
+        public static final int auth_client_needs_update_title=0x7f060016;
         /**   Title for notification shown when GooglePlayServices is unavailable [CHAR LIMIT=42] 
          */
-        public static final int auth_client_play_services_err_notification_msg=0x7f060013;
+        public static final int auth_client_play_services_err_notification_msg=0x7f060017;
         /**   Requested by string saying which app requested the notification. [CHAR LIMIT=42] 
          */
-        public static final int auth_client_requested_by_msg=0x7f060014;
+        public static final int auth_client_requested_by_msg=0x7f060018;
         /**   Title for notification shown when a bad version of GooglePlayServices
         has been installed and needs correction for an application to work.
         [CHAR LIMIT=70] 
          */
-        public static final int auth_client_using_bad_version_title=0x7f06000f;
-        public static final int basic_description=0x7f060019;
-        public static final int basic_map=0x7f060017;
-        public static final int brazil=0x7f06006f;
-        public static final int camera_demo=0x7f06001a;
-        public static final int camera_description=0x7f06001b;
-        public static final int cancel=0x7f060078;
-        public static final int circle_demo=0x7f06001c;
-        public static final int circle_description=0x7f06001d;
-        public static final int clear_map=0x7f06001e;
+        public static final int auth_client_using_bad_version_title=0x7f060013;
+        public static final int basic_description=0x7f06001d;
+        public static final int basic_map=0x7f06001b;
+        public static final int brazil=0x7f060073;
+        public static final int camera_demo=0x7f06001e;
+        public static final int camera_description=0x7f06001f;
+        public static final int cancel=0x7f06007c;
+        public static final int circle_demo=0x7f060020;
+        public static final int circle_description=0x7f060021;
+        public static final int clear_map=0x7f060022;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
         will direct user to application settings of Google Play services where they
         can enable it [CHAR LIMIT=40] 
@@ -365,19 +369,31 @@ containing a value of this type.
         Google Play services (from Play Store) [CHAR LIMIT=40] 
          */
         public static final int common_google_play_services_install_title=0x7f060000;
+        /**  Message in confirmation dialog informing the user that they provided an invalid account. [CHAR LIMIT=NONE] 
+         */
+        public static final int common_google_play_services_invalid_account_text=0x7f06000c;
+        /**  Title of confirmation dialog informing the user that they provided an invalid account. [CHAR LIMIT=40] 
+         */
+        public static final int common_google_play_services_invalid_account_title=0x7f06000b;
+        /**  Message in confirmation dialog informing the user that a network error occurred. [CHAR LIMIT=NONE] 
+         */
+        public static final int common_google_play_services_network_error_text=0x7f06000a;
+        /**  Title of confirmation dialog informing the user that a network error occurred. [CHAR LIMIT=40] 
+         */
+        public static final int common_google_play_services_network_error_title=0x7f060009;
         /**  Message in confirmation dialog informing user there is an unknown issue in Google Play
         services [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_unknown_issue=0x7f060009;
+        public static final int common_google_play_services_unknown_issue=0x7f06000d;
         /**  Message in confirmation dialog informing user that Google Play services is not supported on their device [CHAR LIMIT=NONE] 
          */
-        public static final int common_google_play_services_unsupported_text=0x7f06000b;
+        public static final int common_google_play_services_unsupported_text=0x7f06000f;
         /**  Title of confirmation dialog informing user that Google Play services is not supported on their device [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_unsupported_title=0x7f06000a;
+        public static final int common_google_play_services_unsupported_title=0x7f06000e;
         /**  Button in confirmation dialog for updating Google Play services [CHAR LIMIT=40] 
          */
-        public static final int common_google_play_services_update_button=0x7f06000c;
+        public static final int common_google_play_services_update_button=0x7f060010;
         /**  Message in confirmation dialog informing user that they need to update
         Google Play services (from Play Store) [CHAR LIMIT=NONE] 
          */
@@ -388,98 +404,98 @@ containing a value of this type.
         public static final int common_google_play_services_update_title=0x7f060007;
         /**  Sign-in button text [CHAR LIMIT=15] 
          */
-        public static final int common_signin_button_text=0x7f06000d;
+        public static final int common_signin_button_text=0x7f060011;
         /**  Long form sign-in button text [CHAR LIMIT=30] 
          */
-        public static final int common_signin_button_text_long=0x7f06000e;
-        public static final int compass=0x7f06001f;
-        public static final int custom_info_contents=0x7f060020;
-        public static final int custom_info_window=0x7f060021;
-        public static final int default_info_window=0x7f060022;
-        public static final int demo_title=0x7f060023;
-        public static final int down_arrow=0x7f060024;
-        public static final int drag_melbourne=0x7f060025;
-        public static final int dubai=0x7f060070;
-        public static final int duration=0x7f060026;
-        public static final int events_demo=0x7f060028;
-        public static final int events_description=0x7f060029;
-        public static final int explore=0x7f06006d;
-        public static final int fill_alpha=0x7f06002a;
-        public static final int fill_hue=0x7f06002b;
-        public static final int glacier=0x7f060075;
-        public static final int go_to_bondi=0x7f06002c;
-        public static final int go_to_sydney=0x7f06002d;
-        public static final int groundoverlay_demo=0x7f06002e;
-        public static final int groundoverlay_description=0x7f06002f;
-        public static final int hue=0x7f060027;
-        public static final int hybrid=0x7f060030;
-        public static final int ipAddress=0x7f060076;
-        public static final int layers_demo=0x7f060031;
-        public static final int layers_description=0x7f060032;
-        public static final int left_arrow=0x7f060033;
-        public static final int legal_info=0x7f060034;
-        public static final int locationsource_demo=0x7f060035;
-        public static final int locationsource_description=0x7f060036;
-        public static final int map_not_ready=0x7f060037;
-        public static final int marker_demo=0x7f060038;
-        public static final int marker_description=0x7f060039;
-        public static final int move_the_camera=0x7f06003a;
-        public static final int multi_map_demo=0x7f06003b;
-        public static final int multi_map_description=0x7f06003c;
-        public static final int my_location=0x7f06003d;
-        public static final int my_location_demo=0x7f06003e;
-        public static final int my_location_description=0x7f06003f;
-        public static final int mylocation_button=0x7f060040;
-        public static final int mylocation_layer=0x7f060041;
-        public static final int no_demos=0x7f060042;
-        public static final int normal=0x7f060043;
-        public static final int ok=0x7f060077;
-        public static final int options_demo=0x7f060044;
-        public static final int options_description=0x7f060045;
-        public static final int play_services_not_installed=0x7f060046;
-        public static final int polygon_demo=0x7f060047;
-        public static final int polygon_description=0x7f060048;
-        public static final int polyline_demo=0x7f060049;
-        public static final int polyline_description=0x7f06004a;
-        public static final int programmatic_demo=0x7f06004b;
-        public static final int programmatic_description=0x7f06004c;
-        public static final int properties_circle=0x7f06004d;
-        public static final int properties_sydney_polygon=0x7f06004f;
-        public static final int properties_sydney_polyline=0x7f06004e;
-        public static final int raw_mapview_demo=0x7f060051;
-        public static final int raw_mapview_description=0x7f060052;
-        public static final int reset_map=0x7f060053;
-        public static final int retain_map=0x7f060054;
-        public static final int retain_map_description=0x7f060055;
-        public static final int right_arrow=0x7f060056;
-        public static final int rotate=0x7f060050;
-        public static final int satellite=0x7f060057;
-        public static final int saudi=0x7f060074;
-        public static final int save_state_demo=0x7f060058;
-        public static final int save_state_description=0x7f060059;
-        public static final int save_state_instructions=0x7f06005a;
-        public static final int scroll=0x7f06005b;
-        public static final int stop_animation=0x7f06005c;
-        public static final int stroke_width=0x7f06005d;
-        public static final int tap_instructions=0x7f06005e;
-        public static final int terrain=0x7f06005f;
-        public static final int tile_overlay_demo=0x7f060060;
-        public static final int tile_overlay_description=0x7f060061;
-        public static final int tilt=0x7f060062;
-        public static final int timemachine_controller=0x7f060018;
-        public static final int traffic=0x7f060063;
-        public static final int transparency=0x7f060064;
-        public static final int uisettings_demo=0x7f060065;
-        public static final int uisettings_description=0x7f060066;
-        public static final int up_arrow=0x7f060067;
-        public static final int urmia=0x7f060073;
-        public static final int vegas=0x7f060072;
-        public static final int width=0x7f060068;
-        public static final int wyoming=0x7f060071;
-        public static final int zoom_buttons=0x7f060069;
-        public static final int zoom_gestures=0x7f06006a;
-        public static final int zoom_in=0x7f06006b;
-        public static final int zoom_out=0x7f06006c;
+        public static final int common_signin_button_text_long=0x7f060012;
+        public static final int compass=0x7f060023;
+        public static final int custom_info_contents=0x7f060024;
+        public static final int custom_info_window=0x7f060025;
+        public static final int default_info_window=0x7f060026;
+        public static final int demo_title=0x7f060027;
+        public static final int down_arrow=0x7f060028;
+        public static final int drag_melbourne=0x7f060029;
+        public static final int dubai=0x7f060074;
+        public static final int duration=0x7f06002a;
+        public static final int events_demo=0x7f06002c;
+        public static final int events_description=0x7f06002d;
+        public static final int explore=0x7f060071;
+        public static final int fill_alpha=0x7f06002e;
+        public static final int fill_hue=0x7f06002f;
+        public static final int glacier=0x7f060079;
+        public static final int go_to_bondi=0x7f060030;
+        public static final int go_to_sydney=0x7f060031;
+        public static final int groundoverlay_demo=0x7f060032;
+        public static final int groundoverlay_description=0x7f060033;
+        public static final int hue=0x7f06002b;
+        public static final int hybrid=0x7f060034;
+        public static final int ipAddress=0x7f06007a;
+        public static final int layers_demo=0x7f060035;
+        public static final int layers_description=0x7f060036;
+        public static final int left_arrow=0x7f060037;
+        public static final int legal_info=0x7f060038;
+        public static final int locationsource_demo=0x7f060039;
+        public static final int locationsource_description=0x7f06003a;
+        public static final int map_not_ready=0x7f06003b;
+        public static final int marker_demo=0x7f06003c;
+        public static final int marker_description=0x7f06003d;
+        public static final int move_the_camera=0x7f06003e;
+        public static final int multi_map_demo=0x7f06003f;
+        public static final int multi_map_description=0x7f060040;
+        public static final int my_location=0x7f060041;
+        public static final int my_location_demo=0x7f060042;
+        public static final int my_location_description=0x7f060043;
+        public static final int mylocation_button=0x7f060044;
+        public static final int mylocation_layer=0x7f060045;
+        public static final int no_demos=0x7f060046;
+        public static final int normal=0x7f060047;
+        public static final int ok=0x7f06007b;
+        public static final int options_demo=0x7f060048;
+        public static final int options_description=0x7f060049;
+        public static final int play_services_not_installed=0x7f06004a;
+        public static final int polygon_demo=0x7f06004b;
+        public static final int polygon_description=0x7f06004c;
+        public static final int polyline_demo=0x7f06004d;
+        public static final int polyline_description=0x7f06004e;
+        public static final int programmatic_demo=0x7f06004f;
+        public static final int programmatic_description=0x7f060050;
+        public static final int properties_circle=0x7f060051;
+        public static final int properties_sydney_polygon=0x7f060053;
+        public static final int properties_sydney_polyline=0x7f060052;
+        public static final int raw_mapview_demo=0x7f060055;
+        public static final int raw_mapview_description=0x7f060056;
+        public static final int reset_map=0x7f060057;
+        public static final int retain_map=0x7f060058;
+        public static final int retain_map_description=0x7f060059;
+        public static final int right_arrow=0x7f06005a;
+        public static final int rotate=0x7f060054;
+        public static final int satellite=0x7f06005b;
+        public static final int saudi=0x7f060078;
+        public static final int save_state_demo=0x7f06005c;
+        public static final int save_state_description=0x7f06005d;
+        public static final int save_state_instructions=0x7f06005e;
+        public static final int scroll=0x7f06005f;
+        public static final int stop_animation=0x7f060060;
+        public static final int stroke_width=0x7f060061;
+        public static final int tap_instructions=0x7f060062;
+        public static final int terrain=0x7f060063;
+        public static final int tile_overlay_demo=0x7f060064;
+        public static final int tile_overlay_description=0x7f060065;
+        public static final int tilt=0x7f060066;
+        public static final int timemachine_controller=0x7f06001c;
+        public static final int traffic=0x7f060067;
+        public static final int transparency=0x7f060068;
+        public static final int uisettings_demo=0x7f060069;
+        public static final int uisettings_description=0x7f06006a;
+        public static final int up_arrow=0x7f06006b;
+        public static final int urmia=0x7f060077;
+        public static final int vegas=0x7f060076;
+        public static final int width=0x7f06006c;
+        public static final int wyoming=0x7f060075;
+        public static final int zoom_buttons=0x7f06006d;
+        public static final int zoom_gestures=0x7f06006e;
+        public static final int zoom_in=0x7f06006f;
+        public static final int zoom_out=0x7f060070;
     }
     public static final class styleable {
         /** Attributes that can be used with a MapAttrs.
@@ -535,7 +551,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraBearing
+          @attr name com.example.mapdemo:cameraBearing
         */
         public static final int MapAttrs_cameraBearing = 1;
         /**
@@ -549,7 +565,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTargetLat
+          @attr name com.example.mapdemo:cameraTargetLat
         */
         public static final int MapAttrs_cameraTargetLat = 2;
         /**
@@ -563,7 +579,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTargetLng
+          @attr name com.example.mapdemo:cameraTargetLng
         */
         public static final int MapAttrs_cameraTargetLng = 3;
         /**
@@ -577,7 +593,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraTilt
+          @attr name com.example.mapdemo:cameraTilt
         */
         public static final int MapAttrs_cameraTilt = 4;
         /**
@@ -591,7 +607,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:cameraZoom
+          @attr name com.example.mapdemo:cameraZoom
         */
         public static final int MapAttrs_cameraZoom = 5;
         /**
@@ -611,7 +627,7 @@ containing a value of this type.
 <tr><td><code>terrain</code></td><td>3</td><td></td></tr>
 <tr><td><code>hybrid</code></td><td>4</td><td></td></tr>
 </table>
-          @attr name android:mapType
+          @attr name com.example.mapdemo:mapType
         */
         public static final int MapAttrs_mapType = 0;
         /**
@@ -625,7 +641,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiCompass
+          @attr name com.example.mapdemo:uiCompass
         */
         public static final int MapAttrs_uiCompass = 6;
         /**
@@ -639,7 +655,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiRotateGestures
+          @attr name com.example.mapdemo:uiRotateGestures
         */
         public static final int MapAttrs_uiRotateGestures = 7;
         /**
@@ -653,7 +669,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiScrollGestures
+          @attr name com.example.mapdemo:uiScrollGestures
         */
         public static final int MapAttrs_uiScrollGestures = 8;
         /**
@@ -667,7 +683,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiTiltGestures
+          @attr name com.example.mapdemo:uiTiltGestures
         */
         public static final int MapAttrs_uiTiltGestures = 9;
         /**
@@ -681,7 +697,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiZoomControls
+          @attr name com.example.mapdemo:uiZoomControls
         */
         public static final int MapAttrs_uiZoomControls = 10;
         /**
@@ -695,7 +711,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:uiZoomGestures
+          @attr name com.example.mapdemo:uiZoomGestures
         */
         public static final int MapAttrs_uiZoomGestures = 11;
         /**
@@ -709,7 +725,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:useViewLifecycle
+          @attr name com.example.mapdemo:useViewLifecycle
         */
         public static final int MapAttrs_useViewLifecycle = 12;
         /**
@@ -723,7 +739,7 @@ containing a value of this type.
 theme attribute (in the form
 "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
 containing a value of this type.
-          @attr name android:zOrderOnTop
+          @attr name com.example.mapdemo:zOrderOnTop
         */
         public static final int MapAttrs_zOrderOnTop = 13;
     };
