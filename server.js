@@ -26,19 +26,30 @@ var app = connect()
 //
 var io = require('socket.io').listen(app);
 
+// log level defaults to 3
+// The amount of detail that the server should output to the logger.
+// 0 - error
+// 1 - warn
+// 2 - info
+// 3 - debug
+io.set('log level', 2);
+
 var state = {};
 
 function syncAll( socket, sig, data ) {
   socket.broadcast.emit( 'sync ' + sig, data );
+  //console.log( "broadcast: ", JSON.stringify(data));
+  //socket.send( data );
+  //socket.emit("message", JSON.stringify(data));
 }
 
 function syncSingle( socket, sig, data ) {
   socket.emit( 'sync ' + sig, data );
 }
 
-function bounce( socket, sig ) {
+function bounce( socket, sig, source ) {
   socket.on( sig, function (data) {
-    if (DEBUG) console.log( 'bouncing ' + sig );
+    if (DEBUG) console.log( 'from ' + source + ' bouncing ' + sig + " " + JSON.stringify(data));
     state[sig] = data; // save the last packet broadcast
     syncAll( socket, sig, data );
   });
@@ -51,9 +62,9 @@ var viewsync = io
     for( var sig in state ) {
       //syncSingle( socket, sig, state[sig] );
     }
-    bounce( socket, 'view' );
-    bounce( socket, 'time' );
-    bounce( socket, 'play' );
+    bounce( socket, 'view', 'viewsync' );
+    bounce( socket, 'time', 'viewsync' );
+    bounce( socket, 'play', 'viewsync' );
   });
 
 //
@@ -62,14 +73,15 @@ var viewsync = io
 var controller = io
 .of('/controller')
 .on('connection', function (socket) {
-    bounce( socket, 'setLocation' );
-    bounce( socket, 'mapViewUpdate' );
-    bounce( socket, 'mapZoomTo' );
-    bounce( socket, 'playTour' );
-    bounce( socket, 'decodeTour' );
-    bounce( socket, 'returnTour' );
-    bounce( socket, 'play' );
-    bounce( socket, 'pause' );
+    bounce( socket, 'setLocation', 'controller' );
+    bounce( socket, 'mapViewUpdate', 'controller' );
+    bounce( socket, 'mapZoomTo', 'controller' );
+    bounce( socket, 'playTour', 'controller' );
+    bounce( socket, 'decodeTour', 'controller' );
+    bounce( socket, 'returnTour', 'controller' );
+    bounce( socket, 'handlePlayPauseServer', 'controller' );
+    bounce( socket, 'handlePlayPauseController', 'controller' );
+    bounce( socket, 'setControllerPlayButton', 'controller' );
     });
 
 //
