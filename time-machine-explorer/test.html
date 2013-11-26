@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="js/jquery/jquery.min.js" type="text/javascript"></script>
+    <script>
+      var creatTour = function(tour) {
+        $.ajax({
+          type: "POST",
+          url: "https://timemachine-hyperwall.appspot.com/tour",
+          data: {
+            fragment: tour
+          }
+        }).done(function(data) {
+          console.log(data);
+        });
+      };
+
+      var login = function() {
+        $.ajax({
+          type: "POST",
+          url: "https://timemachine-hyperwall.appspot.com/login",
+          data: {
+            sitename: "createlab",
+            password: "f0b5d537"
+          }
+        }).done(function(data) {
+          console.log(data);
+          var tour = "CBDkDAQFCkEUGP0Pthis%20is%20florida_florida_B";
+          creatTour(tour);
+        });
+      };
+
+      //$(login);
+    </script>
+  </head>
+  <body>
+    <a href="http://localhost:8080/hyperwall.html?master=true">Hyperwall Master</a>
+    <br/>
+    <a href="http://localhost:8080/hyperwall.html?master=true&fullControls=true&showControls=true&showMap=true&mapPosition=topRight">Hyperwall Master With Controls</a>
+  </body>
+</html>
+

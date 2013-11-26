@@ -65,29 +65,30 @@ public class MapControllerActivity extends FragmentActivity {
      * Note that this may be null if the Google Play services APK is not available.
      */
     private GoogleMap mMap;
-    private float maxZoom = 10.5f;
+    private float maxZoom = 12.1f;
     private SocketIO socket = null;
     private String controllerURL;
     private String locationDataFromControllerHTML; 
     private boolean isMapTimedUpdate = true;
     private int mapUpdateTime = 10;
-    private int setViewGracefullyTime = 5000;
+    private int setViewGracefullyTime = 7000;
     private Handler mapUpdateHandler = new Handler();
     public static final String hyperwallPref = "hyperwallPref";
     public int counter = 0;
     public ImageButton playPause;
     private double lastLat = 0;
     private double lastLng = 0;
-    private float lastZoom = 0;
+    private double lastZoom = 0;
+    double roundTo = 1000000;
+    // time machine zoom starts from 0, while google map starts from 1
+    float timeMachineAndGoogleMapZoomOffset = 1.44f;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.controller);
-        //setUpMapIfNeeded();
         // Setup the socket connection
         createDialog();
-        //setupSocketConnection();
         setupUI();
     }
 
@@ -123,7 +124,7 @@ public class MapControllerActivity extends FragmentActivity {
                 SharedPreferences.Editor editor = settings.edit();
                 editor.putString("serverIP", ipText);
                 editor.commit();
-                // Connect websocket
+                // Connect Websocket
                 setupSocketConnection(ipText);
                 // Call controller.html
                 controllerURL = "http://" + ipText + ":8080/controller.html";                
@@ -234,11 +235,10 @@ public class MapControllerActivity extends FragmentActivity {
     			public void onCameraChange(CameraPosition position) {
     				if(socket != null) {
     					System.out.println("I move! " + counter++);
-    					socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom+1.5f));
+    					socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom - timeMachineAndGoogleMapZoomOffset));
     					// Limit the max zoom
     					if(position.zoom > maxZoom) {
-    						mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
-    						//mMap.moveCamera(CameraUpdateFactory.zoomTo(maxZoom));						
+    						mMap.moveCamera(CameraUpdateFactory.zoomTo(maxZoom));						
     					}
     				}
     			}
@@ -254,20 +254,16 @@ public class MapControllerActivity extends FragmentActivity {
     				mapUpdateHandler.post(new Runnable() {
     					public void run () {
     						if(socket != null && isMapTimedUpdate) {
-        						CameraPosition position = mMap.getCameraPosition();
-        						int roundTo = 1000;
+        						CameraPosition position = mMap.getCameraPosition();        						
         						double currentLat = Math.round(position.target.latitude * roundTo) / roundTo;
         						double currentLng = Math.round(position.target.longitude * roundTo) / roundTo;
-        						float currentZoom = Math.round(position.zoom+1.5f * roundTo) / roundTo;
-        						if(currentLat != lastLat || currentLng != lastLng || currentZoom != lastZoom)
-        						{
-        							//socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom+1.5f));
-        							socket.emit("mapViewUpdate", Double.toString(currentLat) +" "+ Double.toString(currentLng) +" "+ Float.toString(position.zoom+1.5f));
+        						float currentZoom = Math.round(position.zoom * (float)roundTo) / (float)roundTo;
+        						if(currentLat != lastLat || currentLng != lastLng || currentZoom != lastZoom) {
+        							socket.emit("mapViewUpdate", Double.toString(currentLat) +" "+ Double.toString(currentLng) +" "+ Double.toString(currentZoom - timeMachineAndGoogleMapZoomOffset));
         						}
         						// Limit the max zoom
         						if(position.zoom > maxZoom) {
-        							mMap.animateCamera(CameraUpdateFactory.zoomTo(maxZoom));
-        							//mMap.moveCamera(CameraUpdateFactory.zoomTo(maxZoom));        							
+        							mMap.moveCamera(CameraUpdateFactory.zoomTo(maxZoom));        							
         						}
         						lastLat = currentLat;
         						lastLng = currentLng;
@@ -332,8 +328,13 @@ public class MapControllerActivity extends FragmentActivity {
     	mapUpdateHandler.post(new Runnable() {
 			public void run () {
 				String location[] = locationDataFromControllerHTML.split(",");
-				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(location[0]),Double.parseDouble(location[1])), Float.parseFloat(location[2]) - 1.5f), setViewGracefullyTime, null);
-				//mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(location[0]),Double.parseDouble(location[1])), Float.parseFloat(location[2]) - 1.5f));
+				double lat = Double.parseDouble(location[0]);
+				double lng = Double.parseDouble(location[1]);
+				float zoom = Float.parseFloat(location[2]) + timeMachineAndGoogleMapZoomOffset;				
+				lastLat = Math.round(lat * roundTo) / roundTo;
+				lastLng = Math.round(lng * roundTo) / roundTo;
+				lastZoom = Math.round(zoom * (float)roundTo) / (float)roundTo;
+				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng), zoom), setViewGracefullyTime - 2000, null);
 			}
 		});	
     }   

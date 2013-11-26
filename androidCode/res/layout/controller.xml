@@ -22,11 +22,12 @@
     android:layout_height="match_parent"
     tools:context=".MapControllerActivity" >
 
-	<fragment 
-  		android:id="@+id/map"
-	  	android:layout_width="match_parent"
-  		android:layout_height="match_parent"
-  		class="com.google.android.gms.maps.SupportMapFragment"/>
+	<fragment
+	    android:id="@+id/map"
+	    android:layout_width="match_parent"
+	    android:layout_height="643dp"
+	    
+	    class="com.google.android.gms.maps.SupportMapFragment" />
 	
 	<WebView
 	    android:id="@+id/webview"
@@ -39,8 +40,8 @@
 	    android:layout_width="100dp"
 	    android:layout_height="100dp"
 	    android:layout_gravity="bottom"
-	    android:layout_marginBottom="140dp"
-	    android:layout_marginLeft="5dp"
+	    android:layout_marginBottom="160dp"
+	    android:layout_marginLeft="25dp"
 	    android:background="@android:color/transparent"
 	    android:contentDescription="@string/explore"
 	    android:src="@drawable/play" />
