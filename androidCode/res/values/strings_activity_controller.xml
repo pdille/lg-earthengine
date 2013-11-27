@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_title">Timelapse Controller</string>
+    <string name="explore">Explore The World</string>
+    <string name="ipAddress">Enter IP address</string>
+    <string name="connect">Connect</string>
+    <string name="controllerView">controllerView</string> 
+     
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/controllerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ControllerActivity" >
+
+    <fragment
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="643dp"
+        class="com.google.android.gms.maps.SupportMapFragment" />
+
+    <WebView
+        android:id="@+id/webview"
+        android:layout_width="match_parent"
+        android:layout_height="134dp"
+        android:layout_gravity="bottom" />
+
+    <ImageButton
+        android:id="@+id/playPauseButton"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="160dp"
+        android:layout_marginLeft="25dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/explore"
+        android:src="@drawable/play" />
+
+</FrameLayout>
