@@ -3,7 +3,9 @@
 1. [Setting up the master machine](#setup)
 2. [Running the node.js server on the master](#run)
 3. [Syncing up other machines](#sync)
-3. [Installing the Android app](#installApp)
+4. [Installing the Android app](#installApp)
+
+#### [Screenshots for the tablet controller](https://sites.google.com/a/gigapan.org/timelapse/creating-time-machines/time-machine-controller-for-hyperwall)
 
 <a name="setup"></a>
 ## Setting up the master machine:
