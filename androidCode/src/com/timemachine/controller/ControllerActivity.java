@@ -138,13 +138,13 @@ public class ControllerActivity extends FragmentActivity {
  
     private void buildDisconnectDialog() {
         AlertDialog.Builder disconnectDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
-        disconnectDialogBuilder.setMessage("Are you sure that you want to disconnect?");
-        disconnectDialogBuilder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
+        disconnectDialogBuilder.setMessage("Are you sure you want to disconnect?");
+        disconnectDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
                 	   socket.disconnect();
                    }
                });
-        disconnectDialogBuilder.setNegativeButton("no", new DialogInterface.OnClickListener() {
+        disconnectDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
                    }
                });  
@@ -248,7 +248,7 @@ public class ControllerActivity extends FragmentActivity {
         	}
         });
 		locations.loadUrl(controllerURL);
-		
+
 		locations.addJavascriptInterface(this, "androidObject");   
 		WebSettings webSettings = locations.getSettings();
 		webSettings.setJavaScriptEnabled(true);
@@ -271,7 +271,7 @@ public class ControllerActivity extends FragmentActivity {
     	socket.emit("setControllerPlayButton");
     	setUpMapIfNeeded();
     }
-    
+
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only ever
