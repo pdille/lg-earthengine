@@ -31,10 +31,10 @@ Download node.js and install it from http://nodejs.org/download/.
   ```
 
 - **Settings after [http://localhost:8080/hyperwall.html?]()**
-  - master = (boolean; is a master or not)
-  - showControls = (boolean; show the control bar or not)
-  - fullControls = (boolean; show the play/help button or not)
-  - showMap = (boolean; show the google map or not)
+  - master = (true|false; is a master machine or not)
+  - showControls = (true|false; show the control bar or not)
+  - fullControls = (true|false; show the play/help button or not)
+  - showMap = (true|false; show the google map or not)
   - mapPosition = (topRight|topLeft|bottomRight|bottomLeft; set the map position)
 
 <a name="sync"></a>
