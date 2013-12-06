@@ -32,7 +32,10 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_title"
-		android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+<!-- 		android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" > -->
+		<meta-data android:name="com.google.android.gms.version"
+           android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyDNkbf526jRGvxUpJoMi5TTKEsA-YDK3eM" />
@@ -46,5 +49,4 @@
             </intent-filter>
         </activity>   
     </application>
-    
 </manifest>
