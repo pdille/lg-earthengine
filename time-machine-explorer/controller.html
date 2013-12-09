@@ -86,10 +86,8 @@
       // Auto mode variables
       var isAutoModeEnabled = false;
       var screenIdleTimeout;
-      //var screenIdleTime = 360000;
       var screenIdleTime = 60000;
       var autoModeDelayTimeout;
-      //var autoModeDelayTime = 60000;
       var autoModeDelayTime = 20000;
       var currentLocationIdx = 0;
 
@@ -106,7 +104,6 @@
 
       var runAutoMode = function() {
         console.log("runAutoMode");
-        debug("runAutoMode");
         isAutoModeEnabled = true;
         try {
           androidObject.showAutoModeDialog();
