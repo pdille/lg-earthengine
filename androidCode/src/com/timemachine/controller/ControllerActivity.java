@@ -85,11 +85,15 @@ public class ControllerActivity extends FragmentActivity {
     private String ipText;
     private AlertDialog connectDialog;
     private AlertDialog disconnectDialog;
+    private AlertDialog autoModeDialog;
     private String connectDialogTitle = "Connect to server";
+    private String processDialogTitle;
     private ProgressDialog processDialog;
     private boolean isContentViewExist = false;
     // time machine zoom starts from 0, while google map starts from 1
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
+    private WebView locations;
+    private boolean isAutoModeEnabled = false;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +123,7 @@ public class ControllerActivity extends FragmentActivity {
     	// Add actionButtons
     	connectDialogBuilder.setPositiveButton(R.string.connect, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-            	showProcessDialog();
+            	showProcessDialog("Connecting to server...");
                 // Get the text written in IP address section
             	ipText = ipTextbox.getText().toString();
                 // Save IP address
@@ -131,11 +135,24 @@ public class ControllerActivity extends FragmentActivity {
             }
         });
     	buildDisconnectDialog();
+    	buildAutoModeDialog();
     	// Create the AlertDialog
     	connectDialog = connectDialogBuilder.create();
     	connectDialog.show();
     }
- 
+
+    private void buildAutoModeDialog() {
+        AlertDialog.Builder autoModeDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
+        autoModeDialogBuilder.setMessage("Currently running auto mode.");
+        autoModeDialogBuilder.setNegativeButton("Cancel auto mode", new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	   locations.loadUrl("javascript:resetScreenIdleTimeout()");
+                   }
+               });
+        autoModeDialogBuilder.setCancelable(false);
+        autoModeDialog = autoModeDialogBuilder.create(); 
+    }   
+    
     private void buildDisconnectDialog() {
         AlertDialog.Builder disconnectDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
         disconnectDialogBuilder.setMessage("Are you sure you want to disconnect?");
@@ -162,13 +179,25 @@ public class ControllerActivity extends FragmentActivity {
 		});	
     }
     
-    private void showProcessDialog() {
+    @JavascriptInterface
+    public void showAutoModeDialog() {
+    	autoModeDialog.show();
+    }
+    
+    public void showProcessDialog(String newTitle) {
+    	processDialogTitle = newTitle;
         runOnUiThread(new Runnable() {
             public void run() {
-            	processDialog = ProgressDialog.show(ControllerActivity.this, "", "Connecting to server...", true, false);
-			}
+            	System.out.println("showProcessDialog");
+            	processDialog = ProgressDialog.show(ControllerActivity.this, "", processDialogTitle, true, false);
+            }
 		});	
-    }    
+    }   
+    
+    @JavascriptInterface
+    public void setIsAutoModeEnabled(boolean newStatus) {
+    	isAutoModeEnabled = newStatus;
+    }
     
     private void setupSocketConnection (String text) {
     	socket = null;
@@ -238,17 +267,17 @@ public class ControllerActivity extends FragmentActivity {
     private void setupUI () {   	   	
         // Call controller.html
 		controllerURL = "http://" + ipText + ":8080/controller.html";                            
-		WebView locations = (WebView) findViewById(R.id.webview);
+		locations = (WebView) findViewById(R.id.webview);
 		locations.setBackgroundColor(Color.TRANSPARENT);
 		locations.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 		locations.setWebViewClient(new WebViewClient() {
         	public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
         		System.out.println("onReceivedError");
         		showConnectDialog("Error while connecting to controller.");
-        	}
+        	}    	
         });
 		locations.loadUrl(controllerURL);
-
+		
 		locations.addJavascriptInterface(this, "androidObject");   
 		WebSettings webSettings = locations.getSettings();
 		webSettings.setJavaScriptEnabled(true);
@@ -271,7 +300,7 @@ public class ControllerActivity extends FragmentActivity {
     	socket.emit("setControllerPlayButton");
     	setUpMapIfNeeded();
     }
-
+    
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only ever
@@ -309,6 +338,8 @@ public class ControllerActivity extends FragmentActivity {
         	GoogleMap.OnCameraChangeListener listener = new GoogleMap.OnCameraChangeListener() {
     			@Override
     			public void onCameraChange(CameraPosition position) {
+    				if(!isAutoModeEnabled)
+    					locations.loadUrl("javascript:resetScreenIdleTimeout()");
     				if(socket != null) {
     					System.out.println("I move! " + counter++);
     					socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom - timeMachineAndGoogleMapZoomOffset));
@@ -322,6 +353,14 @@ public class ControllerActivity extends FragmentActivity {
     		mMap.setOnCameraChangeListener(listener);
         }
     	else {
+        	GoogleMap.OnCameraChangeListener listener = new GoogleMap.OnCameraChangeListener() {
+    			@Override
+    			public void onCameraChange(CameraPosition position) {
+    				if(!isAutoModeEnabled)
+    					locations.loadUrl("javascript:resetScreenIdleTimeout()");
+    			}
+    		};
+    		mMap.setOnCameraChangeListener(listener);
     		// Setup a timer to update the map location
     		Timer updateMapTimer = new Timer();
     		updateMapTimer.schedule(new TimerTask () {
