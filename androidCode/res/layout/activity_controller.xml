@@ -30,13 +30,4 @@
         android:contentDescription="@string/explore"
         android:src="@drawable/play" />
 
-    <android.gesture.GestureOverlayView
-        android:id="@+id/gestures_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:eventsInterceptionEnabled="false"
-        android:gestureColor="#00000000"
-        android:gestureStrokeType="multiple"
-        android:uncertainGestureColor="#00000000" />
-
 </FrameLayout>

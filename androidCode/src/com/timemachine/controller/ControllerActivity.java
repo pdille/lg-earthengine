@@ -92,15 +92,17 @@ public class ControllerActivity extends FragmentActivity {
     private String processDialogTitle;
     private ProgressDialog processDialog;
     private boolean isContentViewExist = false;
-    // time machine zoom starts from 0, while google map starts from 1
+    // Time Machine zoom starts from 0, while google map starts from 1
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
     private WebView locations;
     private boolean isAutoModeEnabled = false;
     private PowerManager.WakeLock wakeLock;
-    private View gestures_overlay;
     private int reconnectCounter = 0;
     private int maxReconnectCounter = 5;
-    private Timer cancelPreviousZoomingTimer;
+    private Timer cancelPreviousZoomingTimer = new Timer();
+    // Need to set the value to null and do a null check before killing the task
+    // or the thread dies without throwing errors and the code after .cancel() never gets run
+    private TimerTask cancelPreviousZoomingTimerTask = null;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -269,37 +271,22 @@ public class ControllerActivity extends FragmentActivity {
     @JavascriptInterface
     public void setIsAutoModeEnabled(boolean newStatus) {
     	isAutoModeEnabled = newStatus;
-    	if(newStatus == true) {
-    		showOverlay();
+    	if(newStatus == true)
     		wakeLock.acquire();
-    	}
-    	else {
-    		hideOverlay();
+    	else
     		wakeLock.release();
-    	}
     }   
-    
-    public void showOverlay() {
-    	gestures_overlay.setEnabled(true);
-    }
-    
-    public void hideOverlay() {
-    	gestures_overlay.setEnabled(false);
-    }
-    
-    private void setOverlay() {
-    	gestures_overlay = findViewById(R.id.gestures_overlay);
-    	gestures_overlay.setOnTouchListener(new View.OnTouchListener(){
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				if(event.getAction() == MotionEvent.ACTION_DOWN) {
-					locations.loadUrl("javascript:resetScreenIdleTimeout()");
-				}
-				return false;
-			}   		
-    	});
-    	hideOverlay();
-    }
+
+	@Override 
+	public boolean dispatchTouchEvent(MotionEvent event) 
+	{
+		// Detect the general touch event of the entire screen
+		if(isAutoModeEnabled && event.getAction() == MotionEvent.ACTION_DOWN) {
+			System.out.println(event);
+			locations.loadUrl("javascript:resetScreenIdleTimeout()");
+		}		
+		return super.dispatchTouchEvent(event);
+	}    
     
     private void setupUI() {   	   	
         // Call controller.html
@@ -336,7 +323,6 @@ public class ControllerActivity extends FragmentActivity {
 		});	
     	socket.emit("setControllerPlayButton");
     	setUpMapIfNeeded();
-    	setOverlay();
     }
     
     /**
@@ -456,22 +442,23 @@ public class ControllerActivity extends FragmentActivity {
     	locationDataFromControllerHTML = data;
     	isMapTimedUpdate = false;
     	// Create a timer to set it to true
-    	cancelPreviousZoomingTimer.cancel();
-    	cancelPreviousZoomingTimer = null;
-    	cancelPreviousZoomingTimer = new Timer();
-    	cancelPreviousZoomingTimer.schedule(new TimerTask() {
-    	            @Override
-    	            public void run() {
-    	            	isMapTimedUpdate = true;
-    	                runOnUiThread(new Runnable() {
-    	                    public void run() {
-    	                    	// Enable the gesture
-    	                    	mMap.getUiSettings().setZoomGesturesEnabled(true);
-    	                    	mMap.getUiSettings().setScrollGesturesEnabled(true);    	 
-    	                    }
-    	                });  
-       	            }
-    	        }, setViewGracefullyTime);	
+    	if(cancelPreviousZoomingTimerTask != null)
+    		cancelPreviousZoomingTimerTask.cancel();
+    	cancelPreviousZoomingTimerTask = null;
+    	cancelPreviousZoomingTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+            	isMapTimedUpdate = true;
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                    	// Enable the gesture
+                    	mMap.getUiSettings().setZoomGesturesEnabled(true);
+                    	mMap.getUiSettings().setScrollGesturesEnabled(true);    	 
+                    }
+                });  
+            }
+        };
+    	cancelPreviousZoomingTimer.schedule(cancelPreviousZoomingTimerTask, setViewGracefullyTime);	
 		// Set the location of the map to this position
     	mapUpdateHandler.post(new Runnable() {
 			public void run () {

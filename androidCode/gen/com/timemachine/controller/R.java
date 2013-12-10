@@ -210,9 +210,8 @@ containing a value of this type.
     }
     public static final class id {
         public static final int controllerView=0x7f050005;
-        public static final int gestures_overlay=0x7f050009;
         public static final int hybrid=0x7f050004;
-        public static final int ipAddress=0x7f05000a;
+        public static final int ipAddress=0x7f050009;
         public static final int map=0x7f050006;
         public static final int none=0x7f050000;
         public static final int normal=0x7f050001;
