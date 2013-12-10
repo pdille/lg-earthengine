@@ -144,7 +144,7 @@ function zoomHome(view) {
     var doWarp = false;
     timelapse.setNewView(view, doWarp);
     view.zoom -= 0.5;
-    setTimeout(function() {
+    zoomGracefullyTimeout = setTimeout(function() {
       zoomHome(view);
     }, 150);
   } else {

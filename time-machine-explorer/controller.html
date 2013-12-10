@@ -394,7 +394,7 @@
         $toursSlider.on("mousedown touchstart", function() {
           stopScreenIdleTimeout();
         });
-        $toursSlider.on("mouseup touchend", function() {
+        $toursSlider.on("mouseup touchend touchcancel", function() {
           startScreenIdleTimeout();
         });
       };
