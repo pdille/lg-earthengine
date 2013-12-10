@@ -33,12 +33,14 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -94,11 +96,14 @@ public class ControllerActivity extends FragmentActivity {
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
     private WebView locations;
     private boolean isAutoModeEnabled = false;
+    private PowerManager.WakeLock wakeLock;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createConnectDialog();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
     }
     
     private void createConnectDialog () {
@@ -197,6 +202,8 @@ public class ControllerActivity extends FragmentActivity {
     @JavascriptInterface
     public void setIsAutoModeEnabled(boolean newStatus) {
     	isAutoModeEnabled = newStatus;
+    	if(newStatus == true) wakeLock.acquire();
+    	else wakeLock.release();
     }
     
     private void setupSocketConnection (String text) {

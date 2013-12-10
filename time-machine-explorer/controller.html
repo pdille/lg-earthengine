@@ -18,10 +18,8 @@
         width: 190px;
         height: 130px;
         padding: 0;
-        border: 0;
-        margin-top: 2px;
-        margin-right: 1px;
-        margin-left: 1px;
+        border: 1px solid black;
+        margin-top: 1px;
         list-style-type: none;
         -moz-user-select: none;
         -khtml-user-select: none;
@@ -30,7 +28,7 @@
       }
       .tourTxt {
         position: absolute;
-        top: 112px;
+        top: 111px;
         width: inherit;
         font-family: Arial, Helvetica, sans-serif;
         color: white;
@@ -59,6 +57,13 @@
         opacity: 1;
         width: inherit;
         height: inherit;
+      }
+      .tourContainerHighlight {
+        border: 1px solid #feff91;
+        -moz-box-shadow: 0 0 15px #feff91;
+        -webkit-box-shadow: 0 0 15px #feff91;
+        box-shadow: 0 0 15px #feff91;
+        z-index: 1;
       }
       #debug {
         color: black;
@@ -89,21 +94,19 @@
       var screenIdleTime = 60000;
       var autoModeDelayTimeout;
       var autoModeDelayTime = 20000;
-      var currentLocationIdx = 0;
+      var currentLocationIdx = -1;
 
       var triggerAutoModeClick = function() {
-        console.log("triggerAutoModeClick", currentLocationIdx);
-        $toursSlider.children().eq(currentLocationIdx).trigger("click");
         currentLocationIdx++;
         if (currentLocationIdx >= numberOfTours)
           currentLocationIdx = 0;
+        $toursSlider.children().eq(currentLocationIdx).trigger("click");
         autoModeDelayTimeout = setTimeout(function() {
           triggerAutoModeClick();
         }, autoModeDelayTime);
       };
 
       var runAutoMode = function() {
-        console.log("runAutoMode");
         isAutoModeEnabled = true;
         try {
           androidObject.showAutoModeDialog();
@@ -115,7 +118,6 @@
       };
 
       var stopAutoMode = function() {
-        console.log("stopAutoMode");
         isAutoModeEnabled = false;
         try {
           androidObject.setIsAutoModeEnabled(false);
@@ -125,20 +127,18 @@
         clearTimeout(autoModeDelayTimeout);
       };
 
-			var resetScreenIdleTimeout = function() {
-				stopScreenIdleTimeout();
-				startScreenIdleTimeout();
-			};
+      var resetScreenIdleTimeout = function() {
+        stopScreenIdleTimeout();
+        startScreenIdleTimeout();
+      };
 
       var startScreenIdleTimeout = function() {
-        console.log("startScreenIdleTimeout");
         screenIdleTimeout = setTimeout(function() {
           runAutoMode();
         }, screenIdleTime);
       };
 
       var stopScreenIdleTimeout = function() {
-        console.log("stopScreenIdleTimeout");
         if (isAutoModeEnabled)
           stopAutoMode();
         clearTimeout(screenIdleTimeout);
@@ -264,7 +264,6 @@
 
       var setLocation = function(event) {
         var locationElem = $(event.currentTarget);
-        //console.log(locationElem);
         if (locationElem.attr('disabled') == "disabled")
           return;
         locationElem.attr('disabled', 'disabled');
@@ -352,6 +351,13 @@
           //$tourContainer.on("click", playTour);
           $tourContainer.on("click", function(event) {
             setLocation(event);
+            var $currentTarget = $(event.currentTarget);
+            currentLocationIdx = $currentTarget.index();
+            $toursSlider.children().removeClass("tourContainerHighlight");
+            $currentTarget.addClass("tourContainerHighlight");
+            // Scroll to the position
+            if (isAutoModeEnabled)
+              $(document).scrollLeft(Math.round($currentTarget.position().left - $(window).width() / 2 + tourContainerWidth / 2));
           });
         }
         //append elements
