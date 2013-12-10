@@ -63,7 +63,7 @@ Download node.js and install it from http://nodejs.org/download/.
 
 <a name="installApp"></a>
 ## Installing the Android app
-- **[Download Android App](https://github.com/pdille/lg-earthengine/blob/master/androidCode/bin/TimemachineController.apk?raw=true)**
+- **[Download Android App](https://github.com/pdille/lg-earthengine/blob/master/androidCode/bin/TimeMachineController.apk?raw=true)**
 
   Download the apk file from the tablet and install it. You have to enable the following on your tablet to install the app.
   ```
