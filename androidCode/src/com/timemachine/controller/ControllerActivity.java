@@ -43,6 +43,7 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
@@ -87,7 +88,6 @@ public class ControllerActivity extends FragmentActivity {
     private String ipText;
     private AlertDialog connectDialog;
     private AlertDialog disconnectDialog;
-    private AlertDialog autoModeDialog;
     private String connectDialogTitle = "Connect to server";
     private String processDialogTitle;
     private ProgressDialog processDialog;
@@ -97,13 +97,16 @@ public class ControllerActivity extends FragmentActivity {
     private WebView locations;
     private boolean isAutoModeEnabled = false;
     private PowerManager.WakeLock wakeLock;
+    private View gestures_overlay;
+    private int reconnectCounter = 0;
+    private int maxReconnectCounter = 5;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createConnectDialog();
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+        wakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Tag");
     }
     
     private void createConnectDialog () {
@@ -140,23 +143,10 @@ public class ControllerActivity extends FragmentActivity {
             }
         });
     	buildDisconnectDialog();
-    	buildAutoModeDialog();
     	// Create the AlertDialog
     	connectDialog = connectDialogBuilder.create();
     	connectDialog.show();
     }
-
-    private void buildAutoModeDialog() {
-        AlertDialog.Builder autoModeDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
-        autoModeDialogBuilder.setMessage("Currently running auto mode.");
-        autoModeDialogBuilder.setNegativeButton("Cancel auto mode", new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                	   locations.loadUrl("javascript:resetScreenIdleTimeout()");
-                   }
-               });
-        autoModeDialogBuilder.setCancelable(false);
-        autoModeDialog = autoModeDialogBuilder.create(); 
-    }   
     
     private void buildDisconnectDialog() {
         AlertDialog.Builder disconnectDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
@@ -184,11 +174,6 @@ public class ControllerActivity extends FragmentActivity {
 		});	
     }
     
-    @JavascriptInterface
-    public void showAutoModeDialog() {
-    	autoModeDialog.show();
-    }
-    
     public void showProcessDialog(String newTitle) {
     	processDialogTitle = newTitle;
         runOnUiThread(new Runnable() {
@@ -198,15 +183,8 @@ public class ControllerActivity extends FragmentActivity {
             }
 		});	
     }   
-    
-    @JavascriptInterface
-    public void setIsAutoModeEnabled(boolean newStatus) {
-    	isAutoModeEnabled = newStatus;
-    	if(newStatus == true) wakeLock.acquire();
-    	else wakeLock.release();
-    }
-    
-    private void setupSocketConnection (String text) {
+       
+    private void setupSocketConnection(String text) {
     	socket = null;
 		try {
 			socket = new SocketIO("http://"+text+":8080/controller");
@@ -241,7 +219,22 @@ public class ControllerActivity extends FragmentActivity {
             public void onError(SocketIOException socketIOException) {
                 System.out.println("an Error occured");
                 socketIOException.printStackTrace();
-                showConnectDialog("Error! Connect again.");
+                if(socket != null)
+                	setupSocketConnection(ipText);
+                reconnectCounter++;
+                if(reconnectCounter == 1) {
+	            	Timer t = new Timer();
+	            	t.schedule(new TimerTask() {
+	            	            @Override
+	            	            public void run() {
+	            	                if(reconnectCounter >= maxReconnectCounter) {
+	            	                	reconnectCounter = 0;
+	            	                	socket = null;
+	            	                	showConnectDialog("Error! Connect again.");
+	            	                }
+	               	            }
+	            	        }, 30000);
+                }
             }
             @Override
             public void onDisconnect() {
@@ -251,6 +244,7 @@ public class ControllerActivity extends FragmentActivity {
             @Override
             public void onConnect() {
                 System.out.println("Connection established");
+                reconnectCounter = 0;
                 runOnUiThread(new Runnable() {
                 	public void run() {
                 		processDialog.dismiss();  
@@ -271,7 +265,42 @@ public class ControllerActivity extends FragmentActivity {
         });
     }
     
-    private void setupUI () {   	   	
+    @JavascriptInterface
+    public void setIsAutoModeEnabled(boolean newStatus) {
+    	isAutoModeEnabled = newStatus;
+    	if(newStatus == true) {
+    		showOverlay();
+    		wakeLock.acquire();
+    	}
+    	else {
+    		hideOverlay();
+    		wakeLock.release();
+    	}
+    }   
+    
+    public void showOverlay() {
+    	gestures_overlay.setEnabled(true);
+    }
+    
+    public void hideOverlay() {
+    	gestures_overlay.setEnabled(false);
+    }
+    
+    private void setOverlay() {
+    	gestures_overlay = findViewById(R.id.gestures_overlay);
+    	gestures_overlay.setOnTouchListener(new View.OnTouchListener(){
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					locations.loadUrl("javascript:resetScreenIdleTimeout()");
+				}
+				return false;
+			}   		
+    	});
+    	hideOverlay();
+    }
+    
+    private void setupUI() {   	   	
         // Call controller.html
 		controllerURL = "http://" + ipText + ":8080/controller.html";                            
 		locations = (WebView) findViewById(R.id.webview);
@@ -306,6 +335,7 @@ public class ControllerActivity extends FragmentActivity {
 		});	
     	socket.emit("setControllerPlayButton");
     	setUpMapIfNeeded();
+    	setOverlay();
     }
     
     /**

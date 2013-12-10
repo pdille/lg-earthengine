@@ -109,7 +109,6 @@
       var runAutoMode = function() {
         isAutoModeEnabled = true;
         try {
-          androidObject.showAutoModeDialog();
           androidObject.setIsAutoModeEnabled(true);
         } catch(err) {
           console.log("androidObject is undefined for function runAutoMode(). Reference error!");

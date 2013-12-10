@@ -67,8 +67,9 @@ int drawable pause1 0x7f020025
 int drawable play 0x7f020026
 int drawable play1 0x7f020027
 int id controllerView 0x7f050005
+int id gestures_overlay 0x7f050009
 int id hybrid 0x7f050004
-int id ipAddress 0x7f050009
+int id ipAddress 0x7f05000a
 int id map 0x7f050006
 int id none 0x7f050000
 int id normal 0x7f050001
