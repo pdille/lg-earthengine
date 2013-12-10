@@ -100,6 +100,7 @@ public class ControllerActivity extends FragmentActivity {
     private View gestures_overlay;
     private int reconnectCounter = 0;
     private int maxReconnectCounter = 5;
+    private Timer cancelPreviousZoomingTimer;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -455,8 +456,10 @@ public class ControllerActivity extends FragmentActivity {
     	locationDataFromControllerHTML = data;
     	isMapTimedUpdate = false;
     	// Create a timer to set it to true
-    	Timer t = new Timer();
-    	t.schedule(new TimerTask() {
+    	cancelPreviousZoomingTimer.cancel();
+    	cancelPreviousZoomingTimer = null;
+    	cancelPreviousZoomingTimer = new Timer();
+    	cancelPreviousZoomingTimer.schedule(new TimerTask() {
     	            @Override
     	            public void run() {
     	            	isMapTimedUpdate = true;
