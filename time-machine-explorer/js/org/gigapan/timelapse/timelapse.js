@@ -1399,7 +1399,17 @@ if (!window['$']) {
         }
         return false;
       };
-      $("body").bind("mouseup mouseleave", function() {
+      // Make sure we release mousedown upon exiting our viewport if we are inside an iframe
+      $("body").one("mouseleave", function(event) {
+        if (window && (window.self !== window.top)) {
+          mouseIsDown = false;
+          $(videoDiv).removeClass("openHand closedHand");
+          document.onmousemove = saveMouseMove;
+          document.onmouseup = saveMouseUp;
+        }
+      });
+      // Release mousedown upon mouseup
+      $(document).one("mouseup", function(event) {
         mouseIsDown = false;
         $(videoDiv).removeClass("openHand closedHand");
         document.onmousemove = saveMouseMove;

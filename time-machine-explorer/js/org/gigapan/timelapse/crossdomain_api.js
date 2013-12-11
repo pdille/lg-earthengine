@@ -99,7 +99,7 @@ function setupPostMessageHandlers() {
 
 // Set the view, animating smoothly if doWarp is false.
 function setViewGracefully(toView, doWarp, doPlayParam) {
-	cancelZoomGracefully();
+  cancelZoomGracefully();
 
   newView = toView;
   newZoom = toView.zoom;
@@ -175,5 +175,5 @@ function zoomGracefully(view) {
 }
 
 function cancelZoomGracefully() {
-	clearTimeout(zoomGracefullyTimeout);
+  clearTimeout(zoomGracefullyTimeout);
 }
