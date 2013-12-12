@@ -15,7 +15,6 @@
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
@@ -32,23 +31,45 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_title"
-        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
-<!-- 		android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" > -->
-		<meta-data android:name="com.google.android.gms.version" 
-          android:value="@integer/google_play_services_version" />
+        android:label="@string/app_title" >
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyDNkbf526jRGvxUpJoMi5TTKEsA-YDK3eM" />
+        <meta-data
+            android:name="com.google.server.API_KEY.development"
+            android:value="AIzaSyA0STT5GEiqLwh518l_ymEYcCUIWsXpqBg" />
+        <meta-data
+            android:name="com.google.server.API_KEY.production"
+            android:value="AIzaSyA4zli-xlE8uN3qYjZc6lEB8Kq_bSdPGYQ" />
+                
         <activity
             android:name="com.timemachine.controller.ControllerActivity"
             android:label="@string/app_title"
-            android:screenOrientation="landscape" >
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:theme="@style/CustomActionBarTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>   
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
+
+        <provider
+            android:name="com.timemachine.controller.PlacesSuggestionProvider"
+            android:authorities="com.timemachine.controller.PlacesSuggestionProvider.provider"
+            android:syncable="false" />
     </application>
-    
+
 </manifest>

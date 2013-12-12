@@ -6,5 +6,8 @@
     <string name="ipAddress">Enter IP address</string>
     <string name="connect">Connect</string>
     <string name="controllerView">controllerView</string> 
+    <string name="action_search">action_search</string> 
+    <string name="action_settings">action_settings</string>
+    <string name="search_hint">Enter a location</string>     
      
 </resources>

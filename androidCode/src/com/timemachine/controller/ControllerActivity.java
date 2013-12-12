@@ -21,7 +21,9 @@ import io.socket.IOCallback;
 import io.socket.SocketIO;
 import io.socket.SocketIOException;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -33,24 +35,32 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.SearchView;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -96,21 +106,75 @@ public class ControllerActivity extends FragmentActivity {
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
     private WebView locations;
     private boolean isAutoModeEnabled = false;
-    private PowerManager.WakeLock wakeLock;
     private int reconnectCounter = 0;
     private int maxReconnectCounter = 5;
     private Timer cancelPreviousZoomingTimer = new Timer();
     // Need to set the value to null and do a null check before killing the task
     // or the thread dies without throwing errors and the code after .cancel() never gets run
     private TimerTask cancelPreviousZoomingTimerTask = null;
+    TextView searchTextView;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createConnectDialog();
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "My Tag");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if(getIntent() != null)
+        	handleIntent(getIntent());
     }
+    
+    @Override 
+    protected void onNewIntent(Intent intent) { 
+    	if(intent != null)
+    		handleIntent(intent); 
+    } 
+
+    private void handleIntent(Intent intent) { 
+    	if (Intent.ACTION_SEARCH.equals(intent.getAction())) { 
+    		String input = intent.getStringExtra(SearchManager.QUERY);
+			String suggestion = (String) intent.getExtras().get("intent_extra_data_key");	
+			String query;
+    		// Use the query to search your data somehow 
+    		if(suggestion == null)
+    			query = input;
+    		else
+    			query = suggestion;
+    		Geocoder geocoder = new Geocoder(ControllerActivity.this);
+    		try {
+    			List<Address> address = geocoder.getFromLocationName(query, 1);
+    			if (address != null && !address.isEmpty()) {
+    				Address location = address.get(0);
+    				System.out.println(location.getLatitude() + ", " + location.getLongitude());
+    				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()), maxZoom), setViewGracefullyTime, null);
+    			}
+    			else
+    				System.out.println("No address found.");    		   
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+       } 
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions, menu);
+        
+        // Associate searchable configuration with the SearchView
+        // Get the SearchView and set the searchable configuration
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        
+        // Change the text color in the search view
+        int id = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
+        searchTextView = (TextView) searchView.findViewById(id);
+        searchTextView.setHintTextColor(Color.parseColor("#80ffffff"));
+        searchTextView.setTextColor(Color.parseColor("#ffffff"));
+        
+        return super.onCreateOptionsMenu(menu);
+    }      
     
     private void createConnectDialog () {
     	// Load saved IP address
@@ -271,10 +335,6 @@ public class ControllerActivity extends FragmentActivity {
     @JavascriptInterface
     public void setIsAutoModeEnabled(boolean newStatus) {
     	isAutoModeEnabled = newStatus;
-    	if(newStatus == true)
-    		wakeLock.acquire();
-    	else
-    		wakeLock.release();
     }   
 
 	@Override 
