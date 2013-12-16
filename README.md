@@ -62,12 +62,19 @@ Download node.js and install it from http://nodejs.org/download/.
   pitchOffset is for above/below the master. Negative is above and positive is below. yawOffset is for left/right of the master. Negative is to the left and positive is to the right.
 
 <a name="installApp"></a>
+
 ## Installing the Android app
+
+- **Prerequisites**
+
+  Officially we only support Android (latest - 1), which at this time is Android 4.4 and 4.3.
+However, our app should still work on older Android versions (4.2.2 has also been tested), with the requirement that you have **Google Maps installed** and you are running **at least version 7.4.0** of it. If you do have to upgrade your Maps to a later version, **you will need to reboot your device after installing it**. If there is also an update to Google Services for your device, you must install that too.
+
 - **[Download Android App](https://github.com/pdille/lg-earthengine/blob/master/androidCode/bin/TimeMachineController.apk?raw=true)**
 
-  Download the apk file from the tablet and install it. You have to enable the following on your tablet to install the app.
+  Download the apk file from the tablet with the link above and install it. You have to enable the following on your tablet to install the app.
   ```
-  settings -> security -> device administration -> unknown sources
+  Settings -> Security -> Device Administration -> Unknown Sources
   ```
 
 - **Set up the node server first** 
