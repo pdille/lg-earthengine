@@ -20,7 +20,7 @@
         <EditTextPreference
             android:inputType="number"
             android:key="@string/key_autoModeDelayTime"
-            android:summary="The delay for going to the next location in auto mode"
+            android:summary="The delay before going to the next location in auto mode"
             android:title="Auto Mode Delay Time (in seconds)" 
             android:defaultValue="@string/defaultAutoModeDelayTime" />
     </PreferenceCategory>
