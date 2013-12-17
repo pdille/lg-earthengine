@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <intent
+        android:action="android.intent.action.VIEW"
+        android:data="http://www.android.com" />
+
+    <PreferenceCategory android:title="Settings" >
+        <SwitchPreference
+            android:key="@string/key_doAutoMode"
+            android:summary="Toggle auto mode"
+            android:title="Auto Mode"
+            android:defaultValue="true" />
+        <EditTextPreference
+            android:inputType="number"
+            android:key="@string/key_screenIdleTime"
+            android:summary="Screen idle time before starting auto mode"
+            android:title="Auto Mode Screen Idle Time (in seconds)"
+            android:defaultValue="@string/defaultScreenIdleTime" />
+        <EditTextPreference
+            android:inputType="number"
+            android:key="@string/key_autoModeDelayTime"
+            android:summary="The delay for going to the next location in auto mode"
+            android:title="Auto Mode Delay Time (in seconds)" 
+            android:defaultValue="@string/defaultAutoModeDelayTime" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="About" >
+        <Preference
+            android:key="@string/key_version"
+            android:summary=""
+            android:title="Version" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

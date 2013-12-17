@@ -46,10 +46,12 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -88,8 +90,7 @@ public class ControllerActivity extends FragmentActivity {
     private int mapUpdateTime = 10;
     private int setViewGracefullyTime = 7000;
     private Handler mapUpdateHandler = new Handler();
-    public static final String hyperwallPref = "hyperwallPref";
-    public int counter = 0;
+    private SharedPreferences prefs = null;
     public ImageButton playPause;
     private double lastLat = 0;
     private double lastLng = 0;
@@ -104,8 +105,8 @@ public class ControllerActivity extends FragmentActivity {
     private boolean isContentViewExist = false;
     // Time Machine zoom starts from 0, while google map starts from 1
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
-    private WebView locations;
-    private boolean isAutoModeEnabled = false;
+    public static WebView locations;
+    private boolean isAutoModeDelayTimeoutRunning = false;
     private int reconnectCounter = 0;
     private int maxReconnectCounter = 5;
     private Timer cancelPreviousZoomingTimer = new Timer();
@@ -117,14 +118,18 @@ public class ControllerActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         createConnectDialog();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+               
+        // Handle Intent
         if(getIntent() != null)
-        	handleIntent(getIntent());
+        	handleIntent(getIntent());                 
     }
     
     @Override 
-    protected void onNewIntent(Intent intent) { 
+    protected void onNewIntent(Intent intent) {
+    	System.out.println(intent);
     	if(intent != null)
     		handleIntent(intent); 
     } 
@@ -174,12 +179,32 @@ public class ControllerActivity extends FragmentActivity {
         searchTextView.setTextColor(Color.parseColor("#ffffff"));
         
         return super.onCreateOptionsMenu(menu);
-    }      
+    }  
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_disconnect:
+            	disconnectDialog.show();
+                return true;
+            case R.id.action_settings:
+            	openSettings();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+ 
+    private void openSettings() {
+    	Intent intent = new Intent();
+    	intent.setClass(ControllerActivity.this, SettingsActivity.class);
+    	startActivityForResult(intent, 0);
+    }
     
     private void createConnectDialog () {
     	// Load saved IP address
-    	final SharedPreferences settings = getSharedPreferences(hyperwallPref, 0);
-    	String serverIP = settings.getString("serverIP", "");
+    	String serverIP = prefs.getString("serverIP", "");
     	// Instantiate an AlertDialog.Builder with its constructor
     	AlertDialog.Builder connectDialogBuilder = new AlertDialog.Builder(ControllerActivity.this);
     	// Get the layout inflater
@@ -202,7 +227,7 @@ public class ControllerActivity extends FragmentActivity {
                 // Get the text written in IP address section
             	ipText = ipTextbox.getText().toString();
                 // Save IP address
-                SharedPreferences.Editor editor = settings.edit();
+                SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("serverIP", ipText);
                 editor.commit();
                 // Connect Websocket
@@ -333,24 +358,36 @@ public class ControllerActivity extends FragmentActivity {
     }
     
     @JavascriptInterface
-    public void setIsAutoModeEnabled(boolean newStatus) {
-    	isAutoModeEnabled = newStatus;
+    public void setIsAutoModeDelayTimeoutRunning(boolean newStatus) {
+    	isAutoModeDelayTimeoutRunning = newStatus;
     }   
 
 	@Override 
 	public boolean dispatchTouchEvent(MotionEvent event) 
 	{
 		// Detect the general touch event of the entire screen
-		if(isAutoModeEnabled && event.getAction() == MotionEvent.ACTION_DOWN) {
+		if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			System.out.println(event);
-			locations.loadUrl("javascript:resetScreenIdleTimeout()");
+			try {
+				locations.loadUrl("javascript:stopScreenIdleTimeout()");
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if(!isAutoModeDelayTimeoutRunning && event.getAction() == MotionEvent.ACTION_UP) {
+			System.out.println(event);
+			try {
+				locations.loadUrl("javascript:startScreenIdleTimeout()");
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}		
 		return super.dispatchTouchEvent(event);
 	}    
     
-    private void setupUI() {   	   	
+    private void setupUI() {   	
         // Call controller.html
-		controllerURL = "http://" + ipText + ":8080/controller.html";                            
+		controllerURL = "http://" + ipText + ":8080/controller.html";
 		locations = (WebView) findViewById(R.id.webview);
 		locations.setBackgroundColor(Color.TRANSPARENT);
 		locations.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
@@ -358,23 +395,25 @@ public class ControllerActivity extends FragmentActivity {
         	public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
         		System.out.println("onReceivedError");
         		showConnectDialog("Error while connecting to controller.");
-        	}    	
+        	}  
+            @Override
+            public void onPageFinished(WebView view, String url) {
+            	if (url.contains(controllerURL))
+            		loadPreferences();
+                super.onPageFinished(view, url);
+            }
         });
-		locations.loadUrl(controllerURL);
+		try {
+			locations.loadUrl(controllerURL);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		
-		locations.addJavascriptInterface(this, "androidObject");   
+		locations.addJavascriptInterface(this, "androidObject");
 		WebSettings webSettings = locations.getSettings();
 		webSettings.setJavaScriptEnabled(true);
     		
     	playPause = (ImageButton) findViewById(R.id.playPauseButton);
-    	playPause.setLongClickable(true);
-    	playPause.setOnLongClickListener(new View.OnLongClickListener() {			
-			@Override
-			public boolean onLongClick(View v) {
-				disconnectDialog.show();
-				return true;
-			}
-		});
     	playPause.setOnClickListener(new View.OnClickListener() {			
 			@Override
 			public void onClick(View v) {
@@ -383,6 +422,19 @@ public class ControllerActivity extends FragmentActivity {
 		});	
     	socket.emit("setControllerPlayButton");
     	setUpMapIfNeeded();
+    }
+    
+    private void loadPreferences() {
+    	Boolean doAutoMode = prefs.getBoolean(getString(R.string.key_doAutoMode), Boolean.parseBoolean(getString(R.string.defaultDoAutoMode)));
+    	String screenIdleTime = prefs.getString(getString(R.string.key_screenIdleTime), getString(R.string.defaultScreenIdleTime));
+    	String autoModeDelayTime = prefs.getString(getString(R.string.key_autoModeDelayTime), getString(R.string.defaultAutoModeDelayTime));
+		try {
+			locations.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
+			locations.loadUrl("javascript:setScreenIdleTime(" + Integer.parseInt(screenIdleTime) * 1000 + ")");
+			locations.loadUrl("javascript:setAutoModeDelayTime(" + Integer.parseInt(autoModeDelayTime) * 1000 + ")");
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
     }
     
     /**
@@ -422,13 +474,10 @@ public class ControllerActivity extends FragmentActivity {
         	GoogleMap.OnCameraChangeListener listener = new GoogleMap.OnCameraChangeListener() {
     			@Override
     			public void onCameraChange(CameraPosition position) {
-    				if(!isAutoModeEnabled)
-    					locations.loadUrl("javascript:resetScreenIdleTimeout()");
-    				if(socket != null) {
-    					System.out.println("I move! " + counter++);
+    				if (socket != null) {
     					socket.emit("mapViewUpdate", Double.toString(position.target.latitude) +" "+ Double.toString(position.target.longitude) +" "+ Float.toString(position.zoom - timeMachineAndGoogleMapZoomOffset));
     					// Limit the max zoom
-    					if(position.zoom > maxZoom) {
+    					if (position.zoom > maxZoom) {
     						mMap.moveCamera(CameraUpdateFactory.zoomTo(maxZoom));						
     					}
     				}
@@ -437,14 +486,6 @@ public class ControllerActivity extends FragmentActivity {
     		mMap.setOnCameraChangeListener(listener);
         }
     	else {
-        	GoogleMap.OnCameraChangeListener listener = new GoogleMap.OnCameraChangeListener() {
-    			@Override
-    			public void onCameraChange(CameraPosition position) {
-    				if(!isAutoModeEnabled)
-    					locations.loadUrl("javascript:resetScreenIdleTimeout()");
-    			}
-    		};
-    		mMap.setOnCameraChangeListener(listener);
     		// Setup a timer to update the map location
     		Timer updateMapTimer = new Timer();
     		updateMapTimer.schedule(new TimerTask () {

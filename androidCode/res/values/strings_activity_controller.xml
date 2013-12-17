@@ -7,7 +7,15 @@
     <string name="connect">Connect</string>
     <string name="controllerView">controllerView</string> 
     <string name="action_search">action_search</string> 
-    <string name="action_settings">action_settings</string>
-    <string name="search_hint">Enter a location</string>     
+    <string name="action_settings">Settings</string>
+    <string name="search_hint">Enter a location</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="defaultScreenIdleTime">90</string>
+    <string name="defaultAutoModeDelayTime">25</string>
+    <string name="defaultDoAutoMode">true</string>
+    <string name="key_doAutoMode">doAutoMode</string>
+    <string name="key_screenIdleTime">screenIdleTime</string>
+    <string name="key_autoModeDelayTime">autoModeDelayTime</string>
+    <string name="key_version">version</string>
      
 </resources>

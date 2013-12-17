@@ -67,6 +67,9 @@ int drawable pause 0x7f020025
 int drawable pause1 0x7f020026
 int drawable play 0x7f020027
 int drawable play1 0x7f020028
+int id action_disconnect 0x7f06000c
+int id action_settings 0x7f06000d
+int id action_settings_group 0x7f06000b
 int id controllerView 0x7f060005
 int id hybrid 0x7f060004
 int id ipAddress 0x7f060009
@@ -82,6 +85,7 @@ int integer google_play_services_version 0x7f080000
 int layout activity_controller 0x7f030000
 int layout connect_dialog 0x7f030001
 int menu main_activity_actions 0x7f0a0000
+int string action_disconnect 0x7f070022
 int string action_search 0x7f07001f
 int string action_settings 0x7f070020
 int string app_title 0x7f07001a
@@ -113,12 +117,20 @@ int string common_signin_button_text 0x7f070012
 int string common_signin_button_text_long 0x7f070013
 int string connect 0x7f07001d
 int string controllerView 0x7f07001e
+int string defaultAutoModeDelayTime 0x7f070024
+int string defaultDoAutoMode 0x7f070025
+int string defaultScreenIdleTime 0x7f070023
 int string explore 0x7f07001b
 int string ipAddress 0x7f07001c
+int string key_autoModeDelayTime 0x7f070028
+int string key_doAutoMode 0x7f070026
+int string key_screenIdleTime 0x7f070027
+int string key_version 0x7f070029
 int string search_hint 0x7f070021
-int style CustomActionBar 0x7f090001
+int style CustomActionBar 0x7f090002
 int style CustomActionBarTheme 0x7f090000
-int style LoginFormContainer 0x7f090002
+int style CustomActionBarThemeNoOverlay 0x7f090001
+int style LoginFormContainer 0x7f090003
 int[] styleable AdsAttrs { 0x7f010000, 0x7f010001 }
 int styleable AdsAttrs_adSize 0
 int styleable AdsAttrs_adUnitId 1
@@ -137,4 +149,5 @@ int styleable MapAttrs_uiZoomControls 10
 int styleable MapAttrs_uiZoomGestures 11
 int styleable MapAttrs_useViewLifecycle 12
 int styleable MapAttrs_zOrderOnTop 13
-int xml searchable 0x7f040000
+int xml preferences 0x7f040000
+int xml searchable 0x7f040001

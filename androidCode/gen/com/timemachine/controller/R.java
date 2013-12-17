@@ -210,6 +210,9 @@ containing a value of this type.
         public static final int play1=0x7f020028;
     }
     public static final class id {
+        public static final int action_disconnect=0x7f06000c;
+        public static final int action_settings=0x7f06000d;
+        public static final int action_settings_group=0x7f06000b;
         public static final int controllerView=0x7f060005;
         public static final int hybrid=0x7f060004;
         public static final int ipAddress=0x7f060009;
@@ -233,6 +236,7 @@ containing a value of this type.
         public static final int main_activity_actions=0x7f0a0000;
     }
     public static final class string {
+        public static final int action_disconnect=0x7f070022;
         public static final int action_search=0x7f07001f;
         public static final int action_settings=0x7f070020;
         public static final int app_title=0x7f07001a;
@@ -332,17 +336,26 @@ containing a value of this type.
         public static final int common_signin_button_text_long=0x7f070013;
         public static final int connect=0x7f07001d;
         public static final int controllerView=0x7f07001e;
+        public static final int defaultAutoModeDelayTime=0x7f070024;
+        public static final int defaultDoAutoMode=0x7f070025;
+        public static final int defaultScreenIdleTime=0x7f070023;
         public static final int explore=0x7f07001b;
         public static final int ipAddress=0x7f07001c;
+        public static final int key_autoModeDelayTime=0x7f070028;
+        public static final int key_doAutoMode=0x7f070026;
+        public static final int key_screenIdleTime=0x7f070027;
+        public static final int key_version=0x7f070029;
         public static final int search_hint=0x7f070021;
     }
     public static final class style {
-        public static final int CustomActionBar=0x7f090001;
+        public static final int CustomActionBar=0x7f090002;
         public static final int CustomActionBarTheme=0x7f090000;
-        public static final int LoginFormContainer=0x7f090002;
+        public static final int CustomActionBarThemeNoOverlay=0x7f090001;
+        public static final int LoginFormContainer=0x7f090003;
     }
     public static final class xml {
-        public static final int searchable=0x7f040000;
+        public static final int preferences=0x7f040000;
+        public static final int searchable=0x7f040001;
     }
     public static final class styleable {
         /** Attributes that can be used with a AdsAttrs.

@@ -7,9 +7,13 @@
         android:title="@string/action_search"
         android:actionViewClass="android.widget.SearchView" />
     
-<!--     <item
-        android:id="@+id/action_settings"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/> -->
+    <group android:id="@+id/action_settings_group">   
+        <item android:id="@+id/action_disconnect"
+              android:title="@string/action_disconnect" />
+	    <item
+	        android:id="@+id/action_settings"
+	        android:showAsAction="never"
+	        android:title="@string/action_settings" />         
+    </group>    
     
 </menu>
