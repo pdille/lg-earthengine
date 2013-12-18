@@ -40,6 +40,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
@@ -103,18 +104,23 @@ public class ControllerActivity extends FragmentActivity {
     private String processDialogTitle;
     private ProgressDialog processDialog;
     private boolean isContentViewExist = false;
+    public static WebView locations;
+    TextView searchTextView;
+    private boolean isAutoModeDelayTimeoutRunning = false;
+    
     // Time Machine zoom starts from 0, while google map starts from 1
     float timeMachineAndGoogleMapZoomOffset = 1.44f;
-    public static WebView locations;
-    private boolean isAutoModeDelayTimeoutRunning = false;
-    private int reconnectCounter = 0;
-    private int maxReconnectCounter = 5;
-    private Timer cancelPreviousZoomingTimer = new Timer();
+    
+    // Variables for detecting the master
+    private Boolean isMasterConnected = false;
+    private Timer isMasterConnectedTimer = new Timer();
+    private TimerTask isMasterConnectedTimerTask = null;
+          
     // Need to set the value to null and do a null check before killing the task
     // or the thread dies without throwing errors and the code after .cancel() never gets run
     private TimerTask cancelPreviousZoomingTimerTask = null;
-    TextView searchTextView;
-    
+    private Timer cancelPreviousZoomingTimer = new Timer();
+      
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -133,33 +139,7 @@ public class ControllerActivity extends FragmentActivity {
     	if(intent != null)
     		handleIntent(intent); 
     } 
-
-    private void handleIntent(Intent intent) { 
-    	if (Intent.ACTION_SEARCH.equals(intent.getAction())) { 
-    		String input = intent.getStringExtra(SearchManager.QUERY);
-			String suggestion = (String) intent.getExtras().get("intent_extra_data_key");	
-			String query;
-    		// Use the query to search your data somehow 
-    		if(suggestion == null)
-    			query = input;
-    		else
-    			query = suggestion;
-    		Geocoder geocoder = new Geocoder(ControllerActivity.this);
-    		try {
-    			List<Address> address = geocoder.getFromLocationName(query, 1);
-    			if (address != null && !address.isEmpty()) {
-    				Address location = address.get(0);
-    				System.out.println(location.getLatitude() + ", " + location.getLongitude());
-    				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()), maxZoom), setViewGracefullyTime, null);
-    			}
-    			else
-    				System.out.println("No address found.");    		   
-    		} catch (IOException e) {
-    			e.printStackTrace();
-    		}
-       } 
-    }
-    
+   
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
@@ -195,12 +175,58 @@ public class ControllerActivity extends FragmentActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
- 
+    
+	@Override 
+	public boolean dispatchTouchEvent(MotionEvent event) {
+		// Detect the general touch event of the entire screen
+		if(event.getAction() == MotionEvent.ACTION_DOWN) {
+			try {
+				locations.loadUrl("javascript:stopScreenIdleTimeout()");
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if(!isAutoModeDelayTimeoutRunning && event.getAction() == MotionEvent.ACTION_UP) {
+			try {
+				locations.loadUrl("javascript:startScreenIdleTimeout()");
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}		
+		return super.dispatchTouchEvent(event);
+	}  
+	
     private void openSettings() {
     	Intent intent = new Intent();
     	intent.setClass(ControllerActivity.this, SettingsActivity.class);
     	startActivityForResult(intent, 0);
     }
+ 
+    private void handleIntent(Intent intent) { 
+    	if (Intent.ACTION_SEARCH.equals(intent.getAction())) { 
+    		String input = intent.getStringExtra(SearchManager.QUERY);
+			String suggestion = (String) intent.getExtras().get("intent_extra_data_key");	
+			String query;
+    		// Use the query to search your data somehow 
+    		if(suggestion == null)
+    			query = input;
+    		else
+    			query = suggestion;
+    		Geocoder geocoder = new Geocoder(ControllerActivity.this);
+    		try {
+    			List<Address> address = geocoder.getFromLocationName(query, 1);
+    			if (address != null && !address.isEmpty()) {
+    				Address location = address.get(0);
+    				System.out.println(location.getLatitude() + ", " + location.getLongitude());
+    				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()), maxZoom), setViewGracefullyTime, null);
+    			}
+    			else
+    				System.out.println("No address found.");    		   
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+       } 
+    }   
     
     private void createConnectDialog () {
     	// Load saved IP address
@@ -253,7 +279,7 @@ public class ControllerActivity extends FragmentActivity {
                 	   // We *should* call disconnect to free up the sockets, but because of the above issue we can't.
                 	   // Maybe another socket library will help. 
                 	   //socket.disconnect();
-                	   showConnectDialog("Disconnected! Connect again.");
+                	   showConnectDialog("Disconnected. Connect again.");
                    }
                });
         disconnectDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -295,7 +321,7 @@ public class ControllerActivity extends FragmentActivity {
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 			System.out.println("SocketConnection not initialized..!!");
-			showConnectDialog("Error! Connect again.");
+			showConnectDialog("Error while setting up sockets. Connect again.");
 		}
 		
         socket.connect(new IOCallback() {
@@ -319,32 +345,16 @@ public class ControllerActivity extends FragmentActivity {
             public void onError(SocketIOException socketIOException) {
                 System.out.println("an Error occured");
                 socketIOException.printStackTrace();
-                if(socket != null)
-                	setupSocketConnection(ipText);
-                reconnectCounter++;
-                if(reconnectCounter == 1) {
-	            	Timer t = new Timer();
-	            	t.schedule(new TimerTask() {
-	            	            @Override
-	            	            public void run() {
-	            	                if(reconnectCounter >= maxReconnectCounter) {
-	            	                	reconnectCounter = 0;
-	            	                	socket = null;
-	            	                	showConnectDialog("Error! Connect again.");
-	            	                }
-	               	            }
-	            	        }, 30000);
-                }
+                showConnectDialog("Error connecting to server. Connect again.");
             }
             @Override
             public void onDisconnect() {
                 System.out.println("Connection terminated.");
-                //showConnectDialog("Disconnected! Connect again.");
             }
             @Override
             public void onConnect() {
                 System.out.println("Connection established");
-                reconnectCounter = 0;
+                isMasterConnected = false;
                 runOnUiThread(new Runnable() {
                 	public void run() {
                 		processDialog.dismiss();  
@@ -364,35 +374,7 @@ public class ControllerActivity extends FragmentActivity {
             }
         });
     }
-    
-    @JavascriptInterface
-    public void setIsAutoModeDelayTimeoutRunning(boolean newStatus) {
-    	isAutoModeDelayTimeoutRunning = newStatus;
-    }   
-
-	@Override 
-	public boolean dispatchTouchEvent(MotionEvent event) 
-	{
-		// Detect the general touch event of the entire screen
-		if(event.getAction() == MotionEvent.ACTION_DOWN) {
-			System.out.println(event);
-			try {
-				locations.loadUrl("javascript:stopScreenIdleTimeout()");
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
-		if(!isAutoModeDelayTimeoutRunning && event.getAction() == MotionEvent.ACTION_UP) {
-			System.out.println(event);
-			try {
-				locations.loadUrl("javascript:startScreenIdleTimeout()");
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}		
-		return super.dispatchTouchEvent(event);
-	}    
-    
+        
     private void setupUI() {   	
         // Call controller.html
 		controllerURL = "http://" + ipText + ":8080/controller.html";
@@ -402,10 +384,30 @@ public class ControllerActivity extends FragmentActivity {
 		locations.setWebViewClient(new WebViewClient() {
         	public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
         		System.out.println("onReceivedError");
-        		showConnectDialog("Error while connecting to controller.");
-        	}  
+        		showConnectDialog("Error while connecting to controller. Connect again.");
+        	}     	        	
+        	@Override
+        	public void onLoadResource(WebView view, String url) {
+        		System.out.println("onLoadResource: " + url);
+        		if(url.contains("images/controller"))
+        			isMasterConnected = true;
+        	}        	
+        	@Override
+        	public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        		System.out.println("onPageStarted: " + url);
+            	isMasterConnectedTimerTask = null;
+            	isMasterConnectedTimerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(isMasterConnected == false)
+                        	showConnectDialog("Master is not loaded in the browser. Connect again.");
+                    }
+                };
+                isMasterConnectedTimer.schedule(isMasterConnectedTimerTask, 6000);      		
+        	}
             @Override
             public void onPageFinished(WebView view, String url) {
+            	System.out.println("onPageFinished: " + url);
             	if (url.contains(controllerURL))
             		loadPreferences();
                 super.onPageFinished(view, url);
@@ -527,6 +529,10 @@ public class ControllerActivity extends FragmentActivity {
     	mMap.getUiSettings().setZoomControlsEnabled(false);
     }
  
+    @JavascriptInterface
+    public void setIsAutoModeDelayTimeoutRunning(boolean newStatus) {
+    	isAutoModeDelayTimeoutRunning = newStatus;
+    }   
  
     @JavascriptInterface
     public void handlePlayPauseUI (final Boolean isPlayingTimeMachine){
