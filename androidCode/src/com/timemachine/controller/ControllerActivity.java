@@ -237,6 +237,7 @@ public class ControllerActivity extends FragmentActivity {
     	buildDisconnectDialog();
     	// Create the AlertDialog
     	connectDialog = connectDialogBuilder.create();
+    	connectDialog.setOwnerActivity(ControllerActivity.this);
     	connectDialog.show();
     }
     
@@ -245,7 +246,14 @@ public class ControllerActivity extends FragmentActivity {
         disconnectDialogBuilder.setMessage("Are you sure you want to disconnect?");
         disconnectDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                	   socket.disconnect();
+                	   // Calling disconnect() without immediately calling setupSocketConnection()
+                	   // will begin to introduce lag into the App. It seems that CPU usage never decreases.
+                	   // Therefore the App becomes unusable after many disconnects.
+                	   // To avoid this problem, we call setupSocketConnection() without calling disconnect().
+                	   // We *should* call disconnect to free up the sockets, but because of the above issue we can't.
+                	   // Maybe another socket library will help. 
+                	   //socket.disconnect();
+                	   showConnectDialog("Disconnected! Connect again.");
                    }
                });
         disconnectDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -331,7 +339,7 @@ public class ControllerActivity extends FragmentActivity {
             @Override
             public void onDisconnect() {
                 System.out.println("Connection terminated.");
-                showConnectDialog("Disconnected! Connect again.");
+                //showConnectDialog("Disconnected! Connect again.");
             }
             @Override
             public void onConnect() {
