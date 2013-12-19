@@ -68,7 +68,7 @@ Download node.js and install it from http://nodejs.org/download/.
 - **Prerequisites**
 
   Officially we only support Android (latest - 1), which at this time is Android 4.4 and 4.3.
-However, our app should still work on older Android versions (4.2 has also been tested), with the requirement that you have **Google Maps installed** and you are running **at least version 7.4.0** of it. If you do have to upgrade your Maps to a later version, **you will need to reboot your device after installing it**. If there is also an update to Google Services for your device, you must install that too.
+However, our app should still work on Android 4.2, with the requirement that you have **Google Maps installed** and you are running **at least version 7.4.0** of it. If you do have to upgrade your Maps to a later version, **you will need to reboot your device after installing it**. If there is also an update to Google Services for your device, you must install that too. Note that **Android 4.2 is the minimum version we support**.
 
 - **[Download Android App](https://github.com/pdille/lg-earthengine/blob/master/androidCode/bin/TimeMachineController.apk?raw=true)**
 
