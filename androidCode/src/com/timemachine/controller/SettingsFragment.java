@@ -12,10 +12,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     	// Load the preferences from an XML resource
     	addPreferencesFromResource(R.xml.preferences);
-    	
+
         // Set listener for shared preference
     	getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-    	
+
         // Set version
         String version = "";
         try {
@@ -23,16 +23,16 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         	findPreference(getString(R.string.key_version)).setSummary(version);
         } catch (Exception e) {
         	e.printStackTrace();
-        }  
+        }
     }
-    
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     	if(key.equals(getString(R.string.key_doAutoMode))) {
     		boolean doAutoMode = sharedPreferences.getBoolean(key, true);
     		System.out.println(key + ": " + doAutoMode);
     		try {
-    			ControllerActivity.locations.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
+    			ControllerActivity.locationSlider.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
     		} catch(Exception e) {
     			e.printStackTrace();
     		}
@@ -41,22 +41,22 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     		int screenIdleTime = Integer.parseInt(screenIdleTime_str);
     		System.out.println(key + ": " + screenIdleTime);
     		try {
-    			ControllerActivity.locations.loadUrl("javascript:setScreenIdleTime(" + screenIdleTime * 1000 + ")");
+    			ControllerActivity.locationSlider.loadUrl("javascript:setScreenIdleTime(" + screenIdleTime * 1000 + ")");
     		} catch(Exception e) {
     			e.printStackTrace();
-    		}    		
+    		}
     	} else if (key.equals(getString(R.string.key_autoModeDelayTime))) {
     		String autoModeDelayTime_str = validateInput(sharedPreferences, getString(R.string.defaultAutoModeDelayTime), key);
     		int autoModeDelayTime = Integer.parseInt(autoModeDelayTime_str);
     		System.out.println(key + ": " + autoModeDelayTime);
     		try {
-    			ControllerActivity.locations.loadUrl("javascript:setAutoModeDelayTime(" + autoModeDelayTime * 1000 + ")");
+    			ControllerActivity.locationSlider.loadUrl("javascript:setAutoModeDelayTime(" + autoModeDelayTime * 1000 + ")");
     		} catch(Exception e) {
     			e.printStackTrace();
-    		}      		
+    		}
     	}
     }
-    
+
     private String validateInput(SharedPreferences sharedPreferences, String defaultValue, String key) {
 		String input = sharedPreferences.getString(key, defaultValue);
 		if(input.isEmpty()) {
@@ -66,5 +66,5 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 		}
 		return input;
     }
-    
+
 }

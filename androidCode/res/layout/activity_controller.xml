@@ -10,24 +10,41 @@
     <fragment
         android:id="@+id/map"
         android:layout_width="match_parent"
-        android:layout_height="643dp"
+        android:layout_height="match_parent"
         class="com.google.android.gms.maps.SupportMapFragment" />
-
-    <WebView
-        android:id="@+id/webview"
-        android:layout_width="match_parent"
-        android:layout_height="134dp"
-        android:layout_gravity="bottom" />
 
     <ImageButton
         android:id="@+id/playPauseButton"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_marginBottom="160dp"
         android:layout_marginLeft="25dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/explore"
-        android:src="@drawable/play" />
+        android:src="@drawable/play"
+        android:visibility="invisible" />
+
+    <FrameLayout
+        android:id="@+id/sliderContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom" >
+        <ImageButton
+            android:id="@+id/drag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="132dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/drag"
+            android:src="@drawable/drag"
+            android:visibility="invisible" />
+        <WebView
+            android:id="@+id/webview"
+            android:layout_width="match_parent"
+            android:layout_height="134dp"
+            android:layout_gravity="center_horizontal|bottom" />
+    </FrameLayout>
 
 </FrameLayout>

@@ -28,24 +28,24 @@ public class PlacesSuggestionProvider extends ContentProvider {
 	// Suggestion variables
     public static final String AUTHORITY = "com.timemachine.controller.PlacesSuggestionProvider.provider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/search");
-    private static final int SEARCH_SUGGEST = 1;    
-    private static final UriMatcher uriMatcher;    
+    private static final int SEARCH_SUGGEST = 1;
+    private static final UriMatcher uriMatcher;
     private static final String[] SEARCH_SUGGEST_COLUMNS = {
         BaseColumns._ID,
         SearchManager.SUGGEST_COLUMN_TEXT_1,
         SearchManager.SUGGEST_COLUMN_INTENT_EXTRA_DATA,
-    };    
+    };
     static {
     	uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     	uriMatcher.addURI(AUTHORITY, SearchManager.SUGGEST_URI_PATH_QUERY, SEARCH_SUGGEST);
     	uriMatcher.addURI(AUTHORITY, SearchManager.SUGGEST_URI_PATH_QUERY + "/*", SEARCH_SUGGEST);
     }
-   
+
     // Autocomplete variables
     private static final String PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
     private static final String TYPE_AUTOCOMPLETE = "/autocomplete";
     private static final String OUT_JSON = "/json";
-    
+
 	@Override
 	public int delete(Uri arg0, String arg1, String[] arg2) {
 		// TODO Auto-generated method stub
@@ -76,18 +76,18 @@ public class PlacesSuggestionProvider extends ContentProvider {
         switch (uriMatcher.match(uri)) {
             case SEARCH_SUGGEST:
                 String query = uri.getLastPathSegment().toLowerCase();
-                System.out.println("Cursor: " + query); 
-                System.out.println("autocomplete(query)");                
+                System.out.println("Cursor: " + query);
+                System.out.println("autocomplete(query)");
                 if(query.isEmpty() || query.equals("search_suggest_query")) return null;
                 ArrayList<String> autocompleteList = autocomplete(query);
-                System.out.println(autocompleteList.size() + ": " + autocompleteList);              
+                System.out.println(autocompleteList.size() + ": " + autocompleteList);
                 MatrixCursor cursor = new MatrixCursor(SEARCH_SUGGEST_COLUMNS, 1);
                 for (int i=0; i<5; i++) {
                 	String result = autocompleteList.get(i);
                     cursor.addRow(new String[] {
                             "1", result, result
-                    });                	
-                }               
+                    });
+                }
                 return cursor;
             default:
                 throw new IllegalArgumentException("Unknown Uri: " + uri);
@@ -106,14 +106,14 @@ public class PlacesSuggestionProvider extends ContentProvider {
 			API_KEY = getMetadata(getContext(), "com.google.server.API_KEY.development");
 		else
 			API_KEY = getMetadata(getContext(), "com.google.server.API_KEY.production");
-		
+
 		System.out.println("BuildConfig.DEBUG: " + BuildConfig.DEBUG);
 		System.out.println("API_KEY: " + API_KEY);
 
 	    ArrayList<String> resultList = null;
 	    HttpURLConnection conn = null;
 	    StringBuilder jsonResults = new StringBuilder();
-	    
+
 	    try {
 	        StringBuilder sb = new StringBuilder(PLACES_API_BASE + TYPE_AUTOCOMPLETE + OUT_JSON);
 	        sb.append("?sensor=false&key=" + API_KEY);
@@ -156,8 +156,8 @@ public class PlacesSuggestionProvider extends ContentProvider {
 	    }
 
 	    return resultList;
-	}	
-	
+	}
+
 	public static String getMetadata(Context context, String name) {
 		try {
 			ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(
@@ -169,5 +169,5 @@ public class PlacesSuggestionProvider extends ContentProvider {
 		// if we can¡¦t find it in the manifest, just return null
 		}
 		return null;
-	}	
+	}
 }

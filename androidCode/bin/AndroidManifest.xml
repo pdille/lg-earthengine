@@ -11,7 +11,7 @@
     <uses-permission android:name="com.timemachine.controller.permission.MAPS_RECEIVE" />
 
     <uses-sdk
-        android:minSdkVersion="14"
+        android:minSdkVersion="16"
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

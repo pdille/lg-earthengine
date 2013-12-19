@@ -17,5 +17,6 @@
     <string name="key_screenIdleTime">screenIdleTime</string>
     <string name="key_autoModeDelayTime">autoModeDelayTime</string>
     <string name="key_version">version</string>
+    <string name="drag">Show/hide the slider</string>
      
 </resources>
