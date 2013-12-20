@@ -55,6 +55,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.WindowManager;
@@ -102,9 +103,15 @@ public class ControllerActivity extends FragmentActivity {
     private FrameLayout locationSliderContainer;
     TextView searchTextView;
     private Boolean isSliderHidden = false;
-    private int locationSliderHeight;
-    private int locationSliderContainerTop;
-    private int playPauseButtonTop;
+    private float locationSliderHeight;
+    private float originLocationSliderContainerY;
+    private float originPlayPauseButtonY;
+    private float dragYDiffBetweenFingerAndSliderTop;
+    private float dragYDiffBetweenFingerAndPlayPauseTop;
+    private float maxLocationSliderContainerY;
+    private float minLocationSliderContainerY;
+    private float midLocationSliderContainerY;
+    private int tapTimeout = ViewConfiguration.getTapTimeout();
 
     // Socket connection variables
     private SocketIO socket = null;
@@ -400,12 +407,15 @@ public class ControllerActivity extends FragmentActivity {
 		         runOnUiThread(new Runnable() {
 		             public void run() {
 		             	locationSliderHeight = locationSlider.getHeight();
-		             	locationSliderContainerTop = locationSliderContainer.getTop();
-		             	playPauseButtonTop = playPause.getTop();
+		             	originLocationSliderContainerY = locationSliderContainer.getY();
+		             	originPlayPauseButtonY = playPause.getY();
+		             	minLocationSliderContainerY = originLocationSliderContainerY;
+		             	maxLocationSliderContainerY = originLocationSliderContainerY + locationSliderHeight;
+		             	midLocationSliderContainerY = (minLocationSliderContainerY + maxLocationSliderContainerY) / 2;
 		             }
 		         });
 		     	System.out.println("locationSliderHeight: " + locationSliderHeight);
-		     	System.out.println("locationSliderContainerTop: " + locationSliderContainerTop);
+		     	System.out.println("locationSliderContainerY: " + originLocationSliderContainerY);
 		     	locationSlider.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 		     }
 		});
@@ -471,36 +481,67 @@ public class ControllerActivity extends FragmentActivity {
 
     	// Set the drag button
     	drag = (ImageButton) findViewById(R.id.drag);
-    	drag.setOnClickListener(new View.OnClickListener() {
+    	drag.setOnTouchListener(new View.OnTouchListener() {
 			@Override
-			public void onClick(View v) {
-	            runOnUiThread(new Runnable() {
-	                public void run() {
-	                	toggleSlider();
-	                }
-	            });
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getAction() == MotionEvent.ACTION_DOWN) {
+					dragYDiffBetweenFingerAndSliderTop = locationSliderContainer.getY() - event.getRawY();
+					dragYDiffBetweenFingerAndPlayPauseTop = playPause.getY() - event.getRawY();
+				}
+				if(event.getAction() == MotionEvent.ACTION_MOVE) {
+					// Move the slider based on current finger location
+					float newSliderY = event.getRawY() + dragYDiffBetweenFingerAndSliderTop;
+					float newPlayPauseY = event.getRawY() + dragYDiffBetweenFingerAndPlayPauseTop;
+					if(newSliderY > minLocationSliderContainerY && newSliderY < maxLocationSliderContainerY) {
+						locationSliderContainer.setY(newSliderY);
+						playPause.setY(newPlayPauseY);
+					}
+				}
+				if(event.getAction() == MotionEvent.ACTION_UP) {
+					if(event.getEventTime() - event.getDownTime() <= tapTimeout) {
+						// Tap is detected, toggle the slider
+						System.out.println("onTap");
+			            runOnUiThread(new Runnable() {
+			                public void run() {
+			                	toggleSlider();
+			                }
+			            });
+					} else {
+						// Not a tap gesture, slide up or down based on the slider's current position
+						if(locationSliderContainer.getY() > midLocationSliderContainerY)
+				    		slideDown();
+				    	else
+				    		slideUp();
+					}
+				}
+				return true;
 			}
 		});
 
-    	// Set the Goolge map
+    	// Set the Google map
     	setUpMapIfNeeded();
     }
 
     private void toggleSlider() {
-    	int newSliderY, newPlayPauseY;
-    	if(!isSliderHidden) {
-    		// Slide down
-    		System.out.println("Slide down done");
-    		isSliderHidden = true;
-    		newSliderY = locationSliderContainerTop + locationSliderHeight;
-    		newPlayPauseY = playPauseButtonTop + locationSliderHeight;
-    	} else {
-    		// Slide up
-    		System.out.println("Slide up done");
-    		isSliderHidden = false;
-    		newSliderY = locationSliderContainerTop;
-    		newPlayPauseY = playPauseButtonTop;
-    	}
+    	if(!isSliderHidden)
+    		slideDown();
+    	else
+    		slideUp();
+    }
+
+    private void slideDown() {
+		System.out.println("Slide down");
+		isSliderHidden = true;
+		slideTo(maxLocationSliderContainerY, originPlayPauseButtonY + locationSliderHeight);
+    }
+
+    private void slideUp() {
+		System.out.println("Slide up");
+		isSliderHidden = false;
+		slideTo(minLocationSliderContainerY, originPlayPauseButtonY);
+    }
+
+    private void slideTo(float newSliderY, float newPlayPauseY) {
     	locationSliderContainer.animate().y(newSliderY).setDuration(250);
     	playPause.animate().y(newPlayPauseY).setDuration(250);
     }
