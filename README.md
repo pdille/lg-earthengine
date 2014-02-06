@@ -79,4 +79,4 @@ However, our app should still work on Android 4.2, with the requirement that you
 
 - **Set up the node server first** 
 
-  The node server on the master machine needs to be running before you start the app. In addition, the Android tablet and the master machine need to be on the same network. Once you start the app, it will ask you the IP address of the master machine, e.g. 192.168.1.2. Once you enter the IP address, the tablet will be connected. The address will be saved for future runs of the app.
+  The node server on the master machine needs to be running before you start the app. In addition, the Android tablet and the master machine need to be on the same network. Once you start the app, it will ask you the IP address of the master machine, e.g. 192.168.1.2. Once you enter the IP address, the tablet will be connected. For your convenience, the address will be saved for future runs of the app.
