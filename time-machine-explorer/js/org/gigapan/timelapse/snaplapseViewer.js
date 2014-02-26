@@ -37,9 +37,9 @@
 
 var cachedSnaplapses = {};
 var currentlyDisplayedVideoId = 1;
-var KEYFRAME_THUMBNAIL_WIDTH = 100;
+var KEYFRAME_THUMBNAIL_WIDTH = 126;
 // should really be 56.25
-var KEYFRAME_THUMBNAIL_HEIGHT = 56;
+var KEYFRAME_THUMBNAIL_HEIGHT = 73;
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -116,22 +116,33 @@ function playCachedSnaplapse(snaplapseId) {
 (function() {
   var UTIL = org.gigapan.Util;
   var browserSupported = UTIL.browserSupported();
-  var didOnce = false;
-  org.gigapan.timelapse.snaplapse.SnaplapseViewer = function(snaplapse, timelapse, settings) {
+  org.gigapan.timelapse.snaplapse.SnaplapseViewer = function(snaplapse, timelapse, settings, usePresentationSlider) {
+    var didOnce = false;
     var thisObj = this;
     var videoset = timelapse.getVideoset();
     var viewerType = UTIL.getViewerType();
     var composerDivId = snaplapse.getComposerDivId();
     var timelapseViewerDivId = timelapse.getViewerDivId();
     var maxSubtitleLength = 120;
+    var datasetType = timelapse.getDatasetType();
+    var startEditorFromPresentationMode = settings["startEditorFromPresentationMode"] ? settings["startEditorFromPresentationMode"] : false;
+    var rootURL;
+    var rootEmbedURL;
+    var embedWidth = 854;
+    var embedHeight = 480;
+    var useThumbnailServer = settings["useThumbnailServer"] ? settings["useThumbnailServer"] : true;
+    var $sortable;
+    var sortingStartDistance = 30;
+    var moveOneKeyframeIdx = {
+      from: undefined,
+      to: undefined
+    };
+    var $videoSizeSelect;
+    var $createSubtitle_dialog = $("#" + composerDivId + " .createSubtitle_dialog");
+    var $keyframeContainer = $("#" + composerDivId + " .snaplapse_keyframe_container");
 
     var eventListeners = {};
-    // If the user requested a tour editor AND has a div in the DOM for the editor,
-    // then do all related edtior stuff (pull thumbnails for keyframes, etc.)
-    // Otherwise, we will still handle tours but no editor will be displayed.
-    // (No thumbnails for keyframes pulled and loading a tour will display a load
-    // button with the tour name on the center of the viewport.)
-    var editorEnabled = settings["composerDiv"] && $("#" + settings["composerDiv"]).length;
+    var editorEnabled = timelapse.getEditorEnabled();
 
     this.addEventListener = function(eventName, listener) {
       if (eventName && listener && typeof (listener) == "function") {
@@ -156,28 +167,41 @@ function playCachedSnaplapse(snaplapseId) {
 
     var hideViewerUI = function() {
       var $speedControl = $("#" + timelapseViewerDivId + " .toggleSpeed");
+      var $modisSpeedControl = $("#" + timelapseViewerDivId + " .modisToggleSpeed");
       var $googleLogo = $("#" + timelapseViewerDivId + " .googleLogo");
       var $googleMapToggle = $("#" + timelapseViewerDivId + " .toggleGoogleMapBtn");
       var $contextMapResizer = $("#" + timelapseViewerDivId + " .smallMapResizer");
-      var $customTimeline = $("#" + timelapseViewerDivId + "_customTimeline");
-      var $customHelpLabel = $(".customHelpLabel");
-      var $customPlay = $(".customPlay");
-      var $timeText = $("#" + timelapseViewerDivId + "_customTimeline_timeText");
-      var $sideToolBar = $("#" + timelapseViewerDivId + " .sideToolBar").stop(true, true).fadeOut(200);
+      var $customTimeline = $("#" + timelapseViewerDivId + " .customTimeline");
+      var $customHelpLabel = $("#" + timelapseViewerDivId + " .customHelpLabel");
+      var $customPlay = $("#" + timelapseViewerDivId + " .customPlay");
+      var $modisCustomPlay = $("#" + timelapseViewerDivId + " .modisCustomPlay");
+      var $timeText = $("#" + timelapseViewerDivId + " .timeText");
+      var $sideToolBar = $("#" + timelapseViewerDivId + " .sideToolBar");
+      var $modisTimeText = $("#" + timelapseViewerDivId + " .modisTimeText");
+      var $monthSpinnerContainer = $("#" + timelapseViewerDivId + " .monthSpinnerContainer");
+      var $toggleLock = $("#" + timelapseViewerDivId + " .toggleLock");
+      var $scaleBarContainer = $("#" + timelapseViewerDivId + " .scaleBarContainer");
 
       $sideToolBar.hide();
-      $customTimeline.stop(true, true).fadeOut(100);
+      $customTimeline.hide();
       $speedControl.hide();
-      $customHelpLabel.stop(true, true).fadeOut(100);
-      $googleLogo.css("bottom", "-=" + 50 + "px");
+      $modisSpeedControl.hide();
+      $customHelpLabel.hide();
+      $googleLogo.css("bottom", "-=" + 45 + "px");
       $customPlay.hide();
+      $modisCustomPlay.hide();
       $timeText.css({
         "text-align": "center",
         "left": "-=" + 14 + "px",
         "padding-left": "12px"
       });
-      $googleMapToggle.fadeOut(100);
-      $contextMapResizer.fadeOut(100);
+      $googleMapToggle.hide();
+      $contextMapResizer.hide();
+      $modisTimeText.css("top", "+=25px");
+      $monthSpinnerContainer.css("top", "+=25px");
+      $toggleLock.hide();
+      if (datasetType == "modis")
+        $scaleBarContainer.css("bottom", "-=25px");
       if (editorEnabled)
         moveDescriptionBox("down");
     };
@@ -187,31 +211,41 @@ function playCachedSnaplapse(snaplapseId) {
       var $googleLogo = $("#" + timelapseViewerDivId + " .googleLogo");
       var $googleMapToggle = $("#" + timelapseViewerDivId + " .toggleGoogleMapBtn");
       var $contextMapResizer = $("#" + timelapseViewerDivId + " .smallMapResizer");
-      var $customTimeline = $("#" + timelapseViewerDivId + "_customTimeline");
-      var $customHelpLabel = $(".customHelpLabel");
-      var $customPlay = $(".customPlay");
-      var $timeText = $("#" + timelapseViewerDivId + "_customTimeline_timeText");
-      var $sideToolBar = $("#" + timelapseViewerDivId + " .sideToolBar").stop(true, true).fadeOut(200);
+      var $customTimeline = $("#" + timelapseViewerDivId + " .customTimeline");
+      var $customHelpLabel = $("#" + timelapseViewerDivId + " .customHelpLabel");
+      var $customPlay = $("#" + timelapseViewerDivId + " .customPlay");
+      var $modisCustomPlay = $("#" + timelapseViewerDivId + " .modisCustomPlay");
+      var $timeText = $("#" + timelapseViewerDivId + " .timeText");
+      var $sideToolBar = $("#" + timelapseViewerDivId + " .sideToolBar");
+      var $modisTimeText = $("#" + timelapseViewerDivId + " .modisTimeText");
+      var $monthSpinnerContainer = $("#" + timelapseViewerDivId + " .monthSpinnerContainer");
+      var $toggleLock = $("#" + timelapseViewerDivId + " .toggleLock");
+      var $scaleBarContainer = $("#" + timelapseViewerDivId + " .scaleBarContainer");
 
-      $customTimeline.stop(true, true).fadeIn(100);
-      $customHelpLabel.stop(true, true).fadeIn(100);
-      $googleLogo.css("bottom", "+=" + 50 + "px");
+      $customTimeline.show();
+      $customHelpLabel.show();
+      $googleLogo.css("bottom", "+=" + 45 + "px");
       $customPlay.show();
+      $modisCustomPlay.show();
       $timeText.css({
         "text-align": "right",
         "left": "+=" + 14 + "px",
         "padding-left": "0px"
       });
-      $googleMapToggle.fadeIn(100);
-      $contextMapResizer.fadeIn(100);
-      $sideToolBar.stop(true, true).fadeIn(100);
+      $googleMapToggle.show();
+      $contextMapResizer.show();
+      $sideToolBar.show();
+      $modisTimeText.css("top", "-=25px");
+      $monthSpinnerContainer.css("top", "-=25px");
+      $toggleLock.show();
+      if (datasetType == "modis")
+        $scaleBarContainer.css("bottom", "+=25px");
       if (editorEnabled)
         moveDescriptionBox("up");
     };
     this.showViewerUI = showViewerUI;
 
     var initializeTourOverlyUI = function() {
-
       $("#" + timelapseViewerDivId + " .tourLoadOverlayTitleContainer").css({
         'width': '100%'
       });
@@ -248,13 +282,11 @@ function playCachedSnaplapse(snaplapseId) {
           "margin-top": "0px",
           "opacity": "1.0"
         }, 500, function() {
-
           $("#" + timelapseViewerDivId + " .tourLoadOverlayTitleContainer").css({
             'position': 'static',
             'margin-left': '70px',
             'margin-top': '19px'
           });
-
           $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").appendTo($("#" + timelapseViewerDivId + " .snaplapseTourPlayBack"));
           $("#" + timelapseViewerDivId + " .tourLoadOverlayTitleContainer").appendTo($("#" + timelapseViewerDivId + " .snaplapseTourPlayBack"));
           $("#" + timelapseViewerDivId + " .tourLoadOverlay").hide();
@@ -265,7 +297,6 @@ function playCachedSnaplapse(snaplapseId) {
           $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").attr("title", "Click to stop tour playback");
           snaplapse.play();
         });
-
       });
     };
     this.initializeTourOverlyUI = initializeTourOverlyUI;
@@ -273,16 +304,17 @@ function playCachedSnaplapse(snaplapseId) {
     var initializeSnaplapseUI = function() {
       // Hide the annotation bubble
       hideAnnotationBubble();
-      initializeTourOverlyUI();
 
-      // Stop tour button if in viewing only mode
-      $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").click(function() {
-        if ($(this).hasClass("playTour")) {
-          snaplapse.play();
-        } else {
-          snaplapse.stop();
-        }
-      });
+      if (!usePresentationSlider) {
+        initializeTourOverlyUI();
+        // Stop tour button if in viewing only mode
+        $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").click(function() {
+          if ($(this).hasClass("playTour"))
+            snaplapse.play();
+          else
+            snaplapse.stop();
+        });
+      }
 
       // Handle the tour title on the save window
       $("#" + composerDivId + " .saveTimewarpWindow_tourTitleInput").focus(function() {
@@ -294,15 +326,18 @@ function playCachedSnaplapse(snaplapseId) {
           $(this).val("Untitled");
         }
         var tourUrl = snaplapse.getAsUrlString();
-        $("#" + composerDivId + " .saveTimewarpWindow_JSON").val("http://earthengine.google.org/#timelapse/tour=" + tourUrl);
-        $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="854" height="480" src="http://earthengine.google.org/timelapse/player?c=http%3A%2F%2Fearthengine.google.org%2Ftimelapse%2Fdata#tour=' + tourUrl + '" frameborder="0"></iframe>');
+        $("#" + composerDivId + " .saveTimewarpWindow_JSON").val(rootURL + tourUrl);
+        $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="' + embedWidth + '" height="' + embedHeight + '" src="' + rootEmbedURL + tourUrl + '" frameborder="0"></iframe>');
         $("#" + composerDivId + " .saveTimewarpWindow_JSON2_sizes").trigger("change");
       });
 
-      $("#" + composerDivId + " .saveTimewarpWindow_JSON2_sizes").change(function() {
+      $videoSizeSelect = $("#" + composerDivId + " .saveTimewarpWindow_JSON2_sizes");
+      $videoSizeSelect.change(function() {
         var sizeArray = $(this).val().split(",");
         if (sizeArray.length == 2) {
-          $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="' + sizeArray[0] + '" height="' + sizeArray[1] + '" src="http://earthengine.google.org/timelapse/player?c=http%3A%2F%2Fearthengine.google.org%2Ftimelapse%2Fdata#tour=' + snaplapse.getAsUrlString() + '" frameborder="0"></iframe>');
+          embedWidth = sizeArray[0];
+          embedHeight = sizeArray[1];
+          $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="' + embedWidth + '" height="' + embedHeight + '" src="' + rootEmbedURL + snaplapse.getAsUrlString() + '" frameborder="0"></iframe>');
         }
       });
 
@@ -318,9 +353,9 @@ function playCachedSnaplapse(snaplapseId) {
         text: true
       }).click(function() {
         var fullURL = $("#" + composerDivId + " .loadTimewarpWindow_JSON").val();
-        var match = fullURL.match(/tour=[^#?&]*/);
+        var match = fullURL.match(/(tour|presentation)=([^#?&]*)/);
         if (match) {
-          var tour = match[0].substring(5);
+          var tour = match[2];
           thisObj.loadSnaplapse(snaplapse.urlStringToJSON(tour));
         } else {
           alert("Error: Invalid tour");
@@ -332,7 +367,7 @@ function playCachedSnaplapse(snaplapseId) {
         resizable: false,
         autoOpen: false,
         width: 410,
-        height: 460
+        height: 484
       }).parent().appendTo($("#" + composerDivId));
 
       // Add an event listener to the videoset so we can keep track of which video is currently visible, so that we can
@@ -352,47 +387,35 @@ function playCachedSnaplapse(snaplapseId) {
       $("#" + timelapseViewerDivId + ' .stopTimeWarp').hide();
 
       // Configure the keyframe list's selectable handlers
-      $("#" + composerDivId + " .snaplapse_keyframe_list")['selectable']({
-        selected: function(event, ui) {
-          if ($(ui.selected).hasClass("snaplapse_keyframe_list_item")) {
-            // Get the original color
-            var tagColor = ui.selected.style.backgroundColor;
-            var rgb = tagColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),.*\)$/);
-            // Change the selected color
-            $(ui.selected).css("background-color", "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",0.15)");
-          }
-          handleSnaplapseFrameSelectionChange(false);
+      $sortable = $("#" + composerDivId + " .snaplapse_keyframe_list");
+      $sortable.sortable({
+        axis: "x",
+        cursor: "move",
+        distance: sortingStartDistance,
+        tolerance: "pointer",
+        scrollSensitivity: 150,
+        delay: 100,
+        start: function(event, ui) {
+          moveOneKeyframeIdx.from = $(ui.item).index();
+          $sortable.sortable("refreshPositions").sortable("refresh");
+          ui.item.animate({
+            "opacity": "0.5"
+          }, 300);
         },
-        selecting: function(event, ui) {
-          if ($(ui.selecting).hasClass("snaplapse_keyframe_list_item")) {
-            // Get the original color
-            var tagColor = ui.selecting.style.backgroundColor;
-            var rgb = tagColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),.*\)$/);
-            // Change the selected color
-            $(ui.selecting).css("background-color", "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",0.1)");
-          }
+        stop: function(event, ui) {
+          var newIdx = $(ui.item).index();
+          moveOneKeyframeIdx.to = newIdx;
+          snaplapse.moveOneKeyframe(moveOneKeyframeIdx);
+          $sortable.sortable("refreshPositions").sortable("refresh");
+          if (!startEditorFromPresentationMode)
+            snaplapse.hideLastKeyframeTransition(newIdx);
+          ui.item.animate({
+            "opacity": "1"
+          }, 300);
         },
-        unselected: function(event, ui) {
-          // Get the original color
-          var tagColor = ui.unselected.style.backgroundColor;
-          var rgb = tagColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),.*\)$/);
-          // Restore the original color
-          if ($(ui.unselected).hasClass("snaplapse_keyframe_list_item"))
-            $(ui.unselected).css("background-color", "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",0)");
-          handleSnaplapseFrameSelectionChange(false);
-        },
-        unselecting: function(event, ui) {
-          // Get the original color
-          var tagColor = ui.unselecting.style.backgroundColor;
-          var rgb = tagColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),.*\)$/);
-          // Restore the original color
-          if ($(ui.unselecting).hasClass("snaplapse_keyframe_list_item"))
-            $(ui.unselecting).css("background-color", "rgba(" + rgb[1] + "," + rgb[2] + "," + rgb[3] + ",0)");
-        },
-        stop: function() {
-          handleSnaplapseFrameSelectionChange(true);
-        },
-        cancel: ':input,textarea,.button,label'
+        change: function(event, ui) {
+          $sortable.sortable("refreshPositions").sortable("refresh");
+        }
       });
 
       // Add mouse event handlers to the Play/Stop button in the viewer
@@ -404,40 +427,56 @@ function playCachedSnaplapse(snaplapseId) {
       // Finally, set up the snaplapse links
       setupSnaplapseLinks();
 
-      $(".createSubtitle_dialog").dialog({
-        autoOpen: false,
-        height: 260,
-        width: 333,
-        modal: true,
-        resizable: false,
-        buttons: {
-          "Finish and Close": function() {
-            $(this).dialog("close");
-          }
-        },
-        close: function() {
-        },
-      });
-
-      // Display the text annotation when you focus on the description field.
-      $(".subtitle_textarea").on("focus", function(event) {
-        var thisKeyframeId = $(event.target.parentNode).dialog("option", "keyframeId");
-        displaySnaplapseFrameAnnotation(snaplapse.getKeyframeById(thisKeyframeId));
-        checkTextareaMaxlength(this, maxSubtitleLength);
-      }).on("keyup", function(event) {// Save the text annotation on keyup, so that we don't need a save button
-        var thisKeyframeId = $(event.target.parentNode).dialog("option", "keyframeId");
-        snaplapse.setTextAnnotationForKeyframe(thisKeyframeId, $(this).val(), true);
-        displaySnaplapseFrameAnnotation(snaplapse.getKeyframeById(thisKeyframeId));
-        checkTextareaMaxlength(this, maxSubtitleLength);
-      }).on("paste", function() {// Set text limit
-        checkTextareaMaxlength(this, maxSubtitleLength);
-      });
+      if (usePresentationSlider)
+        $createSubtitle_dialog.remove();
+      else {
+        $createSubtitle_dialog.dialog({
+          autoOpen: false,
+          height: 250,
+          width: 310,
+          modal: true,
+          resizable: false,
+          buttons: {
+            "Finish and Close": function() {
+              $(this).dialog("close");
+            }
+          },
+          close: function() {
+          },
+        });
+        // Display the text annotation when you focus on the description field.
+        $(".subtitle_textarea").on("focus", function(event) {
+          var thisKeyframeId = $createSubtitle_dialog.dialog("option", "keyframeId");
+          var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
+          displaySnaplapseFrameAnnotation(thisKeyframe);
+          checkTextareaMaxlength(this, maxSubtitleLength);
+        }).on("keyup", function(event) {
+          // Save the text annotation on keyup, so that we don't need a save button
+          var thisKeyframeId = $createSubtitle_dialog.dialog("option", "keyframeId");
+          snaplapse.setTextAnnotationForKeyframe(thisKeyframeId, $(this).val(), true);
+          var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
+          displaySnaplapseFrameAnnotation(thisKeyframe);
+          checkTextareaMaxlength(this, maxSubtitleLength);
+        }).on("paste", function() {// Set text limit
+          checkTextareaMaxlength(this, maxSubtitleLength);
+        });
+        // Display the keyframe title when you focus on the text input.
+        $(".keyframe_title_input").on("focus", function(event) {
+          var thisKeyframeId = $createSubtitle_dialog.dialog("option", "keyframeId");
+          setKeyframeTitleUI(snaplapse.getKeyframeById(thisKeyframeId));
+        }).on("keyup", function(event) {
+          // Save the text annotation on keyup, so that we don't need a save button
+          var thisKeyframeId = $createSubtitle_dialog.dialog("option", "keyframeId");
+          snaplapse.setTitleForKeyframe(thisKeyframeId, $(this).val(), true);
+          setKeyframeTitleUI(snaplapse.getKeyframeById(thisKeyframeId));
+        });
+      }
 
       // Set the position
       var $tiledContentHolder = $("#" + timelapseViewerDivId + " .tiledContentHolder");
       var playerOffset = $tiledContentHolder.offset();
       var timelineSliderFillerHeight = $("#" + composerDivId + " .timelineSliderFiller").outerHeight() || 12;
-      var newTop = $("#" + timelapseViewerDivId + " .timelineSliderFiller").outerHeight() + $("#" + timelapseViewerDivId + " .controls").outerHeight() + $tiledContentHolder.outerHeight() + playerOffset.top - 1 - (timelineSliderFillerHeight * +!!settings["enableCustomUI"]);
+      var newTop = $("#" + timelapseViewerDivId + " .toolbar").outerHeight() + $tiledContentHolder.outerHeight() + playerOffset.top - 1;
       var newLeft = playerOffset.left;
       var newWidth = $tiledContentHolder.width();
       $("#" + composerDivId + " .snaplapse_keyframe_container").css({
@@ -446,18 +485,26 @@ function playCachedSnaplapse(snaplapseId) {
         "left": newLeft + "px",
         "width": newWidth + "px"
       });
-      if (!editorEnabled || !settings["enableCustomUI"]) {
-        $("#" + composerDivId).hide();
-      } else {
-        if (settings["enableCustomUI"]) {
+      if (!usePresentationSlider) {
+        if (!editorEnabled || !settings["enableCustomUI"]) {
+          $("#" + composerDivId).hide();
+          if (!settings["enableCustomUI"]) {
+            moveDescriptionBox("up");
+          }
+        } else
           moveDescriptionBox("up");
-        }
-      }
+      } else
+        $("#" + composerDivId).hide();
     };
 
     var moveDescriptionBox = function(direction) {
-      var customEditorControlOuterHeight = $("#" + timelapseViewerDivId + " .customEditorControl").outerHeight() || 41;
-      var descriptionOffset = customEditorControlOuterHeight ? customEditorControlOuterHeight + 20 : 0;
+      var descriptionOffset;
+      if (datasetType == undefined) {
+        descriptionOffset = 47;
+      } else {
+        var customEditorControlOuterHeight = $("#" + timelapseViewerDivId + " .customEditorControl").outerHeight() || 41;
+        descriptionOffset = customEditorControlOuterHeight ? customEditorControlOuterHeight + 20 : 0;
+      }
       if (direction == "up") {
         $("#" + timelapseViewerDivId + " .snaplapse-annotation-description").css({
           "bottom": "+=" + descriptionOffset + "px"
@@ -470,32 +517,132 @@ function playCachedSnaplapse(snaplapseId) {
     };
     this.moveDescriptionBox = moveDescriptionBox;
 
-    var handleSnaplapseFrameSelectionChange = function(willWarp) {
+    var handleSnaplapseFrameSelectionChange = function() {
       if (snaplapse.isPlaying()) {
         return;
       }
 
       var selectedItems = $("#" + composerDivId + " .snaplapse_keyframe_list > .ui-selected");
       var numSelected = selectedItems.size();
+      displaySnaplapseFrameAnnotation(null);
 
       if (numSelected == 1) {
         var id = selectedItems.get(0).id;
         var keyframeId = id.split("_")[3];
         var frame = snaplapse.getKeyframeById(keyframeId);
-        displaySnaplapseFrameAnnotation(frame);
+        setKeyframeTitleUI(frame);
+      }
+    };
 
-        if ( typeof willWarp != 'undefined' && willWarp) {
-          timelapse.warpToBoundingBox(frame['bounds']);
-          timelapse.seek(frame['time']);
-        }
+    var setKeyframeCaptionUI = function(frame, element, wantToHide) {
+      var $keyframeSubtitleBox = $("#" + composerDivId + " .keyframeSubtitleBoxForHovering");
+      var $keyframeSubtitle = $keyframeSubtitleBox.find("p");
+      if (wantToHide == true)
+        $keyframeSubtitleBox.stop(true, true).fadeOut(200);
+      else {
+        if (isTextNonEmpty(frame['unsafe_string_description'])) {
+          $keyframeSubtitle.text(frame["unsafe_string_description"]);
+          var $element = $(element);
+          var containerOffset = $keyframeContainer.offset();
+          var containerWidth = $keyframeContainer.width();
+          var elementOffset = $element.offset();
+          var elementWidth = $element.width();
+          var captionWidth = $keyframeSubtitleBox.width();
+          var documentHeight = $(document).height();
+          var pointerLeft = elementOffset.left + elementWidth / 2;
+          var captionLeft = pointerLeft - captionWidth / 2;
+          var distanceBetweenElementAndLeftEdge = elementOffset.left + elementWidth - containerOffset.left;
+          var distanceBetweenElementAndRightEdge = containerWidth - elementOffset.left + containerOffset.left;
+          var minCaptionLeft = containerOffset.left;
+          var maxCaptionLeft = containerWidth - captionWidth + containerOffset.left;
+          var minPointerLeft = containerOffset.left;
+          var maxPointerLeft = containerWidth + containerOffset.left;
+          if (captionLeft < minCaptionLeft)
+            captionLeft = minCaptionLeft + 5;
+          else if (captionLeft > maxCaptionLeft)
+            captionLeft = maxCaptionLeft - 5;
+          if (pointerLeft < minPointerLeft && distanceBetweenElementAndLeftEdge > 19)
+            pointerLeft = minPointerLeft + 5;
+          else if (pointerLeft > maxPointerLeft && distanceBetweenElementAndRightEdge > 19)
+            pointerLeft = maxPointerLeft - 5;
+          var pointerLeftPercent = ((pointerLeft - captionLeft) / captionWidth) * 100;
+          $keyframeSubtitleBox.css({
+            "left": captionLeft + "px",
+            "bottom": (documentHeight - elementOffset.top + 9) + "px"
+          });
+          $keyframeSubtitle.css({
+            "background-position": pointerLeftPercent + "% 100%"
+          });
+          $keyframeSubtitleBox.stop(true, true).fadeIn(200);
+        } else
+          $keyframeSubtitleBox.stop(true, true).fadeOut(200);
+      }
+    };
+
+    var setKeyframeTitleUI = function(frame, wantToHide) {
+      var $thisKeyframeTitle = $("#" + composerDivId + "_snaplapse_keyframe_" + frame.id + "_title");
+      if (wantToHide == true)
+        $thisKeyframeTitle.hide();
+      else {
+        if (isTextNonEmpty(frame['unsafe_string_frameTitle'])) {
+          if (frame['is-description-visible']) {
+            $thisKeyframeTitle.text(frame["unsafe_string_frameTitle"]);
+            $thisKeyframeTitle.show();
+          }
+        } else
+          $thisKeyframeTitle.hide();
+      }
+    };
+
+    var setPresentationMode = function(status) {
+      var $snaplapseContainer = $("#" + composerDivId + " .snaplapse_keyframe_container");
+      if (status == true) {
+        startEditorFromPresentationMode = true;
+        $snaplapseContainer.find(".snaplapse_keyframe_list_item").css("margin-left", "-1px");
+        $snaplapseContainer.find(".snaplapse_keyframe_list_item_play_button").hide();
+        $snaplapseContainer.find(".transition_table").hide();
+        $videoSizeSelect.find("option[value='750,530']").attr('selected', 'selected');
       } else {
-        // Either 0 or more than 1
-        displaySnaplapseFrameAnnotation(null);
+        startEditorFromPresentationMode = false;
+        $snaplapseContainer.find(".snaplapse_keyframe_list_item").css("margin-left", "0px");
+        $snaplapseContainer.find(".snaplapse_keyframe_list_item_play_button").show();
+        $snaplapseContainer.find(".transition_table").show();
+        $videoSizeSelect.find("option[value='854,480']").attr('selected', 'selected');
+      }
+      setRootURLs();
+    };
+    this.setPresentationMode = setPresentationMode;
+
+    var setRootURLs = function() {
+      var parentUrl = "";
+      var sourceUrl = window.location.href.split("#")[0];
+      // TODO: link to our page on the time machine website
+      if (window.top === window.self) {
+        // no iframe
+        parentUrl = sourceUrl;
+      } else {
+        // inside iframe
+        try {
+          parentUrl = window.top.location.href.split("#")[0];
+        } catch(e) {
+          parentUrl = document.referrer.split("#")[0];
+        }
+      }
+      if (startEditorFromPresentationMode) {
+        rootURL = parentUrl + "#presentation=";
+        rootEmbedURL = sourceUrl + "#presentation=";
+      } else {
+        rootURL = parentUrl + "#tour=";
+        rootEmbedURL = sourceUrl + "#tour=";
+        if (datasetType == "landsat") {
+          rootURL = "http://earthengine.google.org/#timelapse/tour=";
+          rootEmbedURL = "http://earthengine.google.org/timelapse/player?c=http%3A%2F%2Fearthengine.google.org%2Ftimelapse%2Fdata#tour=";
+        }
       }
     };
 
     var displaySnaplapseFrameAnnotation = function(frame) {
-      if (frame) {
+      if (frame && !usePresentationSlider) {
         if (frame['is-description-visible']) {
           if (isTextNonEmpty(frame['unsafe_string_description'])) {
             // Uses .text() and not .html() to prevent cross-site scripting
@@ -514,9 +661,12 @@ function playCachedSnaplapse(snaplapseId) {
 
     var newSnaplapse = function(json) {
       snaplapse.clearSnaplapse();
-
       if (!didOnce) {
+        if (usePresentationSlider)
+          setToPresentationViewOnlyMode();
         var $playbackButton = $("#" + timelapseViewerDivId + ' .playbackButton');
+        var $controls = $("#" + timelapseViewerDivId + ' .controls');
+        var $sideToolbar = $("#" + timelapseViewerDivId + ' .sideToolBar');
         snaplapse.addEventListener('play', function() {
           var visualizer = timelapse.getVisualizer();
           var isFullScreen = timelapse.isFullScreen();
@@ -540,7 +690,6 @@ function playCachedSnaplapse(snaplapseId) {
             "height": $snaplapseContainer.height()
           });
           // Other UI
-          $("#" + timelapseViewerDivId + " .viewerModeBtn").button("disable");
           if (!isFullScreen)
             timelapse.disableEditorToolbarButtons();
           if (visualizer) {
@@ -569,10 +718,18 @@ function playCachedSnaplapse(snaplapseId) {
           $("#" + timelapseViewerDivId + " .instructions").stop(true, true).fadeOut(50);
           $("#" + timelapseViewerDivId + " .instructions").removeClass('on');
           $("#" + timelapseViewerDivId + ' .repeatCheckbox').button("disable");
-          $playbackButton.hide();
+          if (datasetType == undefined) {
+            $sideToolbar.stop(true, true).fadeOut(100);
+            $controls.stop(true, true).fadeOut(100);
+            moveDescriptionBox("down");
+          }
           $("#" + timelapseViewerDivId + ' .stopTimeWarp').show();
           $("#" + timelapseViewerDivId + ' .addressLookup').attr("disabled", "disabled");
           $("#" + timelapseViewerDivId + ' .timelineSlider').slider("disable");
+          $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_stop_outline.png").css("opacity", "1.0");
+          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css({
+            "left": "0px"
+          }).toggleClass("playTour stopTour").attr("title", "Click to stop this tour");
         });
 
         snaplapse.addEventListener('stop', function() {
@@ -581,7 +738,6 @@ function playCachedSnaplapse(snaplapseId) {
 
           $("#" + timelapseViewerDivId + " .snaplapsePlayingMask").remove();
           $("#" + composerDivId + " .snaplapsePlayingMask").remove();
-          $("#" + timelapseViewerDivId + " .viewerModeBtn").button("enable");
           if (!isFullScreen)
             timelapse.enableEditorToolbarButtons();
           if (visualizer && !isFullScreen)
@@ -608,16 +764,24 @@ function playCachedSnaplapse(snaplapseId) {
           $("#" + timelapseViewerDivId + ' .stopTimeWarp').hide();
           $playbackButton.removeClass("pause").addClass("play");
           $playbackButton.attr("title", "Play");
-          $playbackButton.show();
+          if (datasetType == undefined) {
+            $sideToolbar.stop(true, true).fadeIn(100);
+            $controls.stop(true, true).fadeIn(100);
+            moveDescriptionBox("up");
+          }
           $("#" + timelapseViewerDivId + ' .repeatCheckbox').button("enable");
           $("#" + timelapseViewerDivId + ' .help').removeClass("disabled").addClass("enabled");
           $("#" + timelapseViewerDivId + ' .addressLookup').removeAttr("disabled");
           hideAnnotationBubble();
           $("#" + timelapseViewerDivId + ' .timelineSlider').slider("enable");
+          $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_replay_outline.png").css("opacity", "1.0");
+          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css({
+            "left": "60px"
+          }).toggleClass("stopTour playTour").attr("title", "Click to replay this tour");
         });
 
-        snaplapse.addEventListener('keyframe-added', function(keyframe, insertionIndex) {
-          addSnaplapseKeyframeListItem(keyframe, insertionIndex, true);
+        snaplapse.addEventListener('keyframe-added', function(keyframe, insertionIndex, keyframes) {
+          addSnaplapseKeyframeListItem(keyframe, insertionIndex, true, undefined, keyframes);
         });
 
         snaplapse.addEventListener('keyframe-loaded', function(keyframe, insertionIndex, keyframes, loadKeyframesLength) {
@@ -626,12 +790,15 @@ function playCachedSnaplapse(snaplapseId) {
 
         snaplapse.addEventListener('keyframe-modified', function(keyframe) {
           $("#" + composerDivId + "_snaplapse_keyframe_" + keyframe['id'] + "_timestamp").text(keyframe['captureTime']);
-          setKeyframeThumbail(keyframe);
+          // TODO: check if the thumbnail server is down and set the flag automatically
+          if (useThumbnailServer)
+            loadThumbnailFromServer(keyframe);
+          else
+            setKeyframeThumbail(keyframe);
         });
 
         snaplapse.addEventListener('keyframe-interval-change', function(keyframe) {
           org.gigapan.Util.log("##################### snaplapse keyframe-interval-change: " + JSON.stringify(keyframe));
-
           // Render the keyframe as selected to show that it's being played
           displaySnaplapseFrameAnnotation(keyframe);
         });
@@ -639,17 +806,23 @@ function playCachedSnaplapse(snaplapseId) {
         // TODO: add videoset listener which listens for the stall event so we can disable the recordKeyframeButton (if not already disabled due to playback)
         didOnce = true;
       }
-      $("#" + composerDivId + " .snaplapse_keyframe_list").empty();
+      $sortable.empty();
       $("#" + timelapseViewerDivId + " .snaplapse-annotation-description > div").text("");
 
       if ( typeof json != 'undefined' && json != null) {
-        timelapse.pause();
-        if (!editorEnabled) {
+        if (!editorEnabled && !usePresentationSlider)
+          timelapse.pause();
+        if (usePresentationSlider) {
+          $("#" + composerDivId).show();
+          if (settings["enableCustomUI"] && editorEnabled) {
+            $("#" + settings["composerDiv"]).hide();
+            $("#" + timelapseViewerDivId + " .customEditorControl").css("visibility", "hidden");
+          }
+        }
+        if (!editorEnabled && !usePresentationSlider) {
           $("#" + timelapseViewerDivId + " .tourLoadOverlay").show();
           $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").show();
-          if ($("#" + timelapseViewerDivId + "_customTimeline").is(':visible')) {
-            timelapse.getSnaplapse().getSnaplapseViewer().hideViewerUI();
-          }
+          timelapse.getSnaplapse().getSnaplapseViewer().hideViewerUI();
         }
         return snaplapse.loadFromJSON(json, 0);
       }
@@ -706,15 +879,15 @@ function playCachedSnaplapse(snaplapseId) {
       keyframeListItem.id = composerDivId + "_snaplapse_keyframe_" + keyframeId;
 
       var keyframeListItems = $("#" + composerDivId + " .snaplapse_keyframe_list_item").get();
-      if (insertionIndex < keyframeListItems.length && isKeyframeFromLoad != true) {
+      if (insertionIndex < keyframeListItems.length && isKeyframeFromLoad != true)
         $("#" + keyframeListItems[insertionIndex - 1]['id']).after(keyframeListItem);
-      } else {
-        $("#" + composerDivId + " .snaplapse_keyframe_list").append(keyframeListItem);
-      }
+      else
+        $sortable.append(keyframeListItem);
 
       var thumbnailId = keyframeListItem.id + "_thumbnail";
       var timestampId = keyframeListItem.id + "_timestamp";
       var descriptionVisibleCheckboxId = keyframeListItem.id + "_description_visible";
+      var descriptionVisibleCheckboxLabelId = keyframeListItem.id + "_description_label";
       var durationId = keyframeListItem.id + "_duration";
       var speedId = keyframeListItem.id + "_speed";
       var loopTimesId = keyframeListItem.id + "_loopTimes";
@@ -726,6 +899,11 @@ function playCachedSnaplapse(snaplapseId) {
       var speedBlockId = keyframeListItem.id + "_speedBlock";
       var transitionSelection = keyframeListItem.id + "_transitionSelection";
       var loopTextId = keyframeListItem.id + "_loopText";
+      var titleId = keyframeListItem.id + "_title";
+      var tableId = keyframeListItem.id + "_table";
+      var thumbnailButtonId = keyframeListItem.id + "_thumbnailButtonId";
+      var keyframeTableId = keyframeListItem.id + "_keyframeTable";
+      var transitionTableId = keyframeListItem.id + "_transitionTable";
 
       var duration = typeof frame['duration'] != 'undefined' && frame['duration'] != null ? frame['duration'] : '';
       var speed = typeof frame['speed'] != 'undefined' && frame['speed'] != null ? frame['speed'] : 100;
@@ -735,56 +913,130 @@ function playCachedSnaplapse(snaplapseId) {
       var disableTourLooping = ( typeof settings['disableTourLooping'] == "undefined") ? false : settings['disableTourLooping'];
 
       var content = '';
-      content += '<table border="0" cellspacing="0" cellpadding="0" class="snaplapse_keyframe_list_item_table">';
-      content += '  <tr valign="center">';
-      content += '    <td valign="center" class="keyframe_table">';
-      content += '      <div id="' + timestampId + '" class="snaplapse_keyframe_list_item_timestamp">' + frame['captureTime'] + '</div>';
-      content += '      <canvas id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></canvas>';
-      content += '      <div id="' + buttonContainerId + '" class="keyframe-button-container">';
-      content += '        <button id="' + updateButtonId + '" title="Update this keyframe to current view">&nbsp</button>';
-      content += '        <button id="' + duplicateButtonId + '" title="Duplicate this keyframe">&nbsp</button>';
-      content += '        <button id="' + playFromHereButtonId + '" class="snaplapse_keyframe_list_item_play_button" title="Play warp starting at this keyframe">&nbsp</button>';
-      content += '        <input class="snaplapse_keyframe_list_item_description_checkbox" id="' + descriptionVisibleCheckboxId + '" type="checkbox" ' + ( isDescriptionVisible ? 'checked="checked"' : '') + '/>';
-      content += '        <label class="snaplapse_keyframe_list_item_description_label" title="Enable/Disable subtitle" for="' + descriptionVisibleCheckboxId + '">&nbsp</label>';
-      content += '      </div>';
-      content += '    </td>';
-      content += '    <td valign="center" class="transition_table">';
-      content += '      <div class="transition_table_mask">';
-      content += '        <div class="snaplapse_keyframe_list_item_duration_container">';
-      content += '					<input type="radio" name="' + transitionSelection + '" id="' + durationBlockId + '" value="duration" style="position: absolute; left: -23px; top: -3px;" ' + (buildConstraint == "duration" ? 'checked="checked"' : '') + '/>';
-      content += '          <span class="snaplapse_keyframe_list_item_duration_label_1">Duration:</span>';
-      content += '          <input type="text" id="' + durationId + '" class="snaplapse_keyframe_list_item_duration" value="' + duration + '">';
-      content += '          <span class="snaplapse_keyframe_list_item_duration_label_2">secs</span>';
-      content += '        </div>';
-      content += '        <div style="height:100%; position: absolute; margin-top: 20px"><div class="snaplapse_keyframe_list_item_speed_container">';
-      content += '          <span class="snaplapse_keyframe_list_item_speed_label_1">Speed:</span>';
-      content += '          <input type="text" id="' + speedId + '" class="snaplapse_keyframe_list_item_speed" value="' + speed + '">';
-      content += '          <span class="snaplapse_keyframe_list_item_speed_label_2">%</span>';
-      content += '        </div>';
-      content += '        <div class="snaplapse_keyframe_list_item_loop_container">';
-      content += '					<input type="radio" name="' + transitionSelection + '" id="' + speedBlockId + '"  value="speed" style="position: absolute; left: -23px;  top: -3px;" ' + (buildConstraint == "speed" ? 'checked="checked"' : '') + '/>';
-      content += '          <span class="snaplapse_keyframe_list_item_duration_label_1" id="' + loopTextId + '">Loops:</span>';
-      content += '          <input type="text" id="' + loopTimesId + '" class="snaplapse_keyframe_list_item_loop" title="Times for looping the entire video" value="' + loopTimes + '">';
-      content += '        </div></div>';
-      content += '      </div>';
-      content += '    </td>';
-      content += '  </tr>';
-      content += '</table>';
+      if (!usePresentationSlider) {
+        // Tour or presentation editor
+        content += '<table id="' + tableId + '" border="0" cellspacing="0" cellpadding="0" class="snaplapse_keyframe_list_item_table">';
+        content += '  <tr valign="center">';
+        content += '    <td valign="center" id="' + keyframeTableId + '" class="keyframe_table">';
+        content += '      <div id="' + timestampId + '" class="snaplapse_keyframe_list_item_timestamp">' + frame['captureTime'] + '</div>';
+        content += '			<div id="' + thumbnailButtonId + '" class="snaplapse_keyframe_list_item_thumbnail_container" title="Warp to this frame">';
+        content += '				<div class="snaplapse_keyframe_list_item_thumbnail_overlay"></div>';
+        if (useThumbnailServer)
+          content += '      	<img id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></img>';
+        else
+          content += '      	<canvas id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></canvas>';
+        content += '				<div id="' + titleId + '" class="snaplapse_keyframe_list_item_title"></div>';
+        content += '			</div>';
+        content += '      <div id="' + buttonContainerId + '" class="keyframe-button-container">';
+        content += '        <button id="' + updateButtonId + '" title="Update this keyframe to current view">&nbsp</button>';
+        content += '        <button id="' + duplicateButtonId + '" title="Duplicate this keyframe">&nbsp</button>';
+        content += '        <button id="' + playFromHereButtonId + '" class="snaplapse_keyframe_list_item_play_button" title="Play warp starting at this keyframe">&nbsp</button>';
+        content += '        <input class="snaplapse_keyframe_list_item_description_checkbox" id="' + descriptionVisibleCheckboxId + '" type="checkbox" ' + ( isDescriptionVisible ? 'checked="checked"' : '') + '/>';
+        content += '        <label class="snaplapse_keyframe_list_item_description_label" id="' + descriptionVisibleCheckboxLabelId + '" title="Enable/Disable subtitle" for="' + descriptionVisibleCheckboxId + '">&nbsp</label>';
+        content += '      </div>';
+        content += '    </td>';
+        content += '    <td valign="center" id="' + transitionTableId + '" class="transition_table">';
+        content += '      <table border="0" cellspacing="0" cellpadding="0" class="transition_table_mask">';
+        content += '  			<tr>';
+        content += '  				<td>';
+        content += '						<input class="snaplapse_keyframe_list_item_loopRadio" type="radio" name="' + transitionSelection + '" id="' + speedBlockId + '"  value="speed" ' + (buildConstraint == "speed" ? 'checked="checked"' : '') + '/>';
+        content += '					</td>';
+        content += '  				<td>';
+        content += '        		<div class="snaplapse_keyframe_list_item_loop_container">';
+        content += '          		<span class="snaplapse_keyframe_list_item_loop_label" id="' + loopTextId + '">Loops:</span>';
+        content += '          		<input type="text" id="' + loopTimesId + '" class="snaplapse_keyframe_list_item_loop" title="Times for looping the entire video" value="' + loopTimes + '">';
+        content += '        		</div>';
+        content += '						<div class="snaplapse_keyframe_list_item_speed_container">';
+        content += '          		<span class="snaplapse_keyframe_list_item_speed_label_1">Speed:</span>';
+        content += '          		<input type="text" id="' + speedId + '" class="snaplapse_keyframe_list_item_speed" value="' + speed + '">';
+        content += '          		<span class="snaplapse_keyframe_list_item_speed_label_2">%</span>';
+        content += '        		</div>';
+        content += '					</td>';
+        content += '				</tr>';
+        content += '  			<tr>';
+        content += '  				<td>';
+        content += '						<input class="snaplapse_keyframe_list_item_durationRadio" type="radio" name="' + transitionSelection + '" id="' + durationBlockId + '" value="duration" ' + (buildConstraint == "duration" ? 'checked="checked"' : '') + '/>';
+        content += '					</td>';
+        content += '  				<td>';
+        content += '        		<div class="snaplapse_keyframe_list_item_duration_container">';
+        content += '          		<span class="snaplapse_keyframe_list_item_duration_label_1">Duration:</span>';
+        content += '          		<input type="text" id="' + durationId + '" class="snaplapse_keyframe_list_item_duration" value="' + duration + '">';
+        content += '          		<span class="snaplapse_keyframe_list_item_duration_label_2">secs</span>';
+        content += '        		</div>';
+        content += '					</td>';
+        content += '				</tr>';
+        content += '      </table>';
+        content += '    </td>';
+        content += '  </tr>';
+        content += '</table>';
+      } else {
+        // Presentation mode view only state
+        content += '			<div id="' + thumbnailButtonId + '" class="snaplapse_keyframe_list_item_thumbnail_container_presentation" title="">';
+        content += '				<div class="snaplapse_keyframe_list_item_thumbnail_overlay"></div>';
+        if (useThumbnailServer)
+          content += '      	<img id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></img>';
+        else
+          content += '      	<canvas id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></canvas>';
+        content += '				<div id="' + titleId + '" class="snaplapse_keyframe_list_item_title"></div>';
+        content += '			</div>';
+      }
 
       $("#" + keyframeListItem.id).html(content).addClass("snaplapse_keyframe_list_item");
+
+      if (startEditorFromPresentationMode && !usePresentationSlider) {
+        // Presentation editor only state
+        $("#" + keyframeListItem.id).css("margin-left", "-1px");
+        $("#" + titleId).show();
+        $("#" + playFromHereButtonId).hide();
+        $("#" + transitionTableId).hide();
+      }
+
+      var $keyframeTable = $("#" + keyframeTableId);
+
+      $keyframeTable.mousedown(function(event) {
+        selectAndGo($("#" + keyframeListItem.id));
+        displaySnaplapseFrameAnnotation(null);
+      });
+
+      if (!usePresentationSlider) {
+        $keyframeTable.hover(function() {
+          var $keyframeListItem = $("#" + keyframeListItem.id);
+          if (!$keyframeListItem.hasClass("ui-selected"))
+            org.gigapan.Util.changeBackgroundColorOpacity($keyframeListItem.get(0), 0.15);
+        }, function() {
+          var $keyframeListItem = $("#" + keyframeListItem.id);
+          if (!$keyframeListItem.hasClass("ui-selected"))
+            org.gigapan.Util.changeBackgroundColorOpacity($keyframeListItem.get(0), 0);
+        });
+      }
+
+      var $thumbnailButton = $("#" + thumbnailButtonId);
+
+      $thumbnailButton.click(function(event) {
+        event.stopPropagation();
+        var id = this.id;
+        var keyframeId = id.split("_")[3];
+        selectAndGo($("#" + keyframeListItem.id), keyframeId);
+        $sortable.children().children().children(".snaplapse_keyframe_list_item_thumbnail_overlay").removeClass("thumbnail_highlight");
+        $(this).children(".snaplapse_keyframe_list_item_thumbnail_overlay").addClass("thumbnail_highlight");
+      });
+
+      if (usePresentationSlider) {
+        $thumbnailButton.hover(function() {
+          var thisKeyframeId = this.id.split("_")[3];
+          var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
+          setKeyframeCaptionUI(thisKeyframe, this);
+        }, function() {
+          var thisKeyframeId = this.id.split("_")[3];
+          var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
+          setKeyframeCaptionUI(thisKeyframe, this, true);
+        });
+      }
 
       if (disableTourLooping) {
         $("#" + loopTimesId).hide();
         $("#" + loopTextId).hide();
-        $("#" + speedBlockId).css({
-          "top": "14px"
-        });
-        $("#" + composerDivId + " .snaplapse_keyframe_list_item_speed_container").css({
-          "top": "15px"
-        });
-        $("#" + composerDivId + " .snaplapse_keyframe_list_item_duration_container").css({
-          "top": "90px"
-        });
+        $("#" + speedBlockId).css("margin-top", "-10px");
       }
 
       $('input[name=' + transitionSelection + ']').change(function() {
@@ -807,22 +1059,40 @@ function playCachedSnaplapse(snaplapseId) {
           primary: "ui-icon-comment"
         },
         text: true
-      }).change(function() {
+      }).change(function(event) {
         var thisKeyframeId = this.id.split("_")[3];
+        var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
+        selectAndGo($("#" + keyframeListItem.id), thisKeyframeId, true);
         if (this.checked) {
           snaplapse.setTextAnnotationForKeyframe(thisKeyframeId, undefined, true);
-          var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
-          if (thisKeyframe["unsafe_string_description"] != undefined) {
+          snaplapse.setTitleForKeyframe(thisKeyframeId, undefined, true);
+          if (thisKeyframe["unsafe_string_description"] != undefined)
             $(".subtitle_textarea").val(thisKeyframe["unsafe_string_description"]);
-          }
-          $(".createSubtitle_dialog").dialog("option", {
+          if (thisKeyframe["unsafe_string_frameTitle"] != undefined)
+            $(".keyframe_title_input").val(thisKeyframe["unsafe_string_frameTitle"]);
+          displaySnaplapseFrameAnnotation(thisKeyframe);
+          $createSubtitle_dialog.dialog("option", {
             "keyframeId": thisKeyframeId,
             "descriptionVisibleCheckboxId": this.id
           }).dialog("open");
         } else {
           snaplapse.setTextAnnotationForKeyframe(thisKeyframeId, undefined, false);
-          displaySnaplapseFrameAnnotation(snaplapse.getKeyframeById(thisKeyframeId));
+          snaplapse.setTitleForKeyframe(thisKeyframeId, undefined, false);
+          displaySnaplapseFrameAnnotation(null);
+          setKeyframeTitleUI(thisKeyframe, true);
         }
+      }).mousedown(function(event) {
+        // For preventing the parent table from getting the click event
+        // this is the first step for a checkbox
+        // also need to prevent the label from bubbling the event
+        event.stopPropagation();
+      });
+
+      $("#" + descriptionVisibleCheckboxLabelId).mousedown(function(event) {
+        // For preventing the parent table from getting the click event
+        // this is the second step for a checkbox
+        // also need to prevent the checkbox from bubbling the event
+        event.stopPropagation();
       });
 
       // Create update button
@@ -831,12 +1101,11 @@ function playCachedSnaplapse(snaplapseId) {
           primary: "ui-icon-refresh"
         },
         text: true
-      }).click(function() {
+      }).click(function(event) {
+        event.stopPropagation();
         var thisKeyframeId = this.id.split("_")[3];
-        var color_head = snaplapse.updateTimeAndPositionForKeyframe(thisKeyframeId);
-        keyframeListItem.style.backgroundColor = color_head + "0.15)";
-        // Select the element
-        UTIL.selectSelectableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + keyframeListItem.id));
+        snaplapse.updateTimeAndPositionForKeyframe(thisKeyframeId);
+        selectAndGo($("#" + keyframeListItem.id), thisKeyframeId, false, true);
       });
 
       // Create duplicate button
@@ -845,11 +1114,11 @@ function playCachedSnaplapse(snaplapseId) {
           primary: "ui-icon-copy"
         },
         text: true
-      }).click(function() {
+      }).click(function(event) {
+        event.stopPropagation();
         var thisKeyframeId = this.id.split("_")[3];
         snaplapse.duplicateKeyframe(thisKeyframeId);
-        // Select the element
-        UTIL.selectSelectableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + keyframeListItem.id));
+        selectAndGo($("#" + keyframeListItem.id), thisKeyframeId, false, true);
       });
 
       // Create play button
@@ -859,7 +1128,8 @@ function playCachedSnaplapse(snaplapseId) {
         },
         text: true,
         disabled: false
-      }).click(function() {
+      }).click(function(event) {
+        event.stopPropagation();
         if (snaplapse.isPlaying()) {
           snaplapse.stop();
         }
@@ -912,31 +1182,80 @@ function playCachedSnaplapse(snaplapseId) {
           timelapse.getVisualizer().updateTagPaths(keyframeListItem.id, keyframe);
       });
 
+      // Override the color of keyframe items
+      var tagColor;
+      if (timelapse.getVisualizer()) {
+        tagColor = timelapse.getTagColor();
+      } else {
+        tagColor = [1, 1, 1];
+      }
+      keyframeListItem.style.backgroundColor = "rgba(" + tagColor[0] + "," + tagColor[1] + "," + tagColor[2] + ",0)";
+
+      // Select the element
+      var autoScroll;
+      if (insertionIndex == loadKeyframesLength - 1 || insertionIndex == keyframes.length - 1)
+        autoScroll = true;
+      UTIL.selectSortableElements($sortable, $("#" + keyframeListItem.id), autoScroll);
+      setKeyframeTitleUI(frame);
+
+      // Hide the last keyframe transition area
+      snaplapse.hideLastKeyframeTransition();
+      timelapse.handleEditorModeToolbarChange();
+      $(".addTimetag").button("option", "disabled", false);
+
+      // The reason to hide and show the elements is the workaround for a webkit refresh bug
+      $keyframeContainer.hide().show(0);
+      resetKeyframeTransitionUI(buildConstraint, keyframeListItem.id);
+
       // Grab the current video frame and store it as the thumbnail in the canvas
       if (!isKeyframeFromLoad) {
         if (shouldDrawThumbnail) {
-          setTimeout(function() {
-            setKeyframeThumbail(frame);
-          }, 100);
+          if (useThumbnailServer)
+            loadThumbnailFromServer(frame);
+          else {
+            setTimeout(function() {
+              setKeyframeThumbail(frame);
+            }, 100);
+          }
         }
       } else {
         var loadNextKeyframe = function() {
           // Timeout since the seeked event hasn't actually fired yet, so delay a bit
           var waitTime = 700;
-          if (!editorEnabled)
+          if (!editorEnabled || useThumbnailServer)
             waitTime = 0;
           setTimeout(function() {
-            if (timelapse.getVisualizer())
-              timelapse.getVisualizer().addTimeTag(keyframes, insertionIndex);
+            if (timelapse.getVisualizer() && !usePresentationSlider)
+              timelapse.getVisualizer().addTimeTag(keyframes, insertionIndex, true);
             if (shouldDrawThumbnail) {
-              setKeyframeThumbail(frame);
+              if (useThumbnailServer)
+                loadThumbnailFromServer(frame);
+              else
+                setKeyframeThumbail(frame);
             }
             if (insertionIndex == loadKeyframesLength - 1) {
+              // Loading completed
               $(".loadingOverlay").remove();
               $(document.body).css("cursor", "default");
-              var firstFrame = snaplapse.getKeyframes()[0];
-              timelapse.warpToBoundingBox(firstFrame.bounds);
-              timelapse.seek(firstFrame.time);
+              // Set the value of the last keyframe to null (need to use reference but not clone)
+              // so swaping it with other keyframes will give a default value
+              snaplapse.resetKeyframe();
+              if (!editorEnabled) {
+                // If the editor UI is not enabled, then we are in view-only mode
+                // and we need to seek to the first frame.
+                var firstFrame = snaplapse.getKeyframes()[0];
+                timelapse.warpToBoundingBox(firstFrame.bounds);
+                timelapse.seek(firstFrame.time);
+                displaySnaplapseFrameAnnotation(firstFrame);
+              } else {
+                if (useThumbnailServer) {
+                  // If we are using the thumbnail server, we aren't already seeking to each frame
+                  // so we need to seek to the last frame manually.
+                  timelapse.warpToBoundingBox(frame.bounds);
+                  timelapse.seek(frame.time);
+                }
+                displaySnaplapseFrameAnnotation(frame);
+              }
               var listeners = eventListeners["snaplapse-loaded"];
               if (listeners) {
                 for (var i = 0; i < listeners.length; i++) {
@@ -951,33 +1270,52 @@ function playCachedSnaplapse(snaplapseId) {
               snaplapse.loadFromJSON(undefined, insertionIndex + 1);
             }
           }, waitTime);
-          if (editorEnabled)
+          if (editorEnabled && !useThumbnailServer)
             videoset.removeEventListener('video-seeked', loadNextKeyframe);
         };
-        if (editorEnabled)
+        if (editorEnabled && !useThumbnailServer) {
+          timelapse.warpToBoundingBox(frame['bounds']);
+          timelapse.seek(frame['time']);
           videoset.addEventListener('video-seeked', loadNextKeyframe);
-        else
+        } else
           loadNextKeyframe();
       }
-      // Override the color of keyframe items
-      var tagColor;
-      if (timelapse.getVisualizer()) {
-        tagColor = timelapse.getTagColor();
-      } else {
-        tagColor = [1, 1, 1];
-      }
-      keyframeListItem.style.backgroundColor = "rgba(" + tagColor[0] + "," + tagColor[1] + "," + tagColor[2] + ",0)";
-      // Select the element
-      UTIL.selectSelectableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + keyframeListItem.id));
-      // Hide the last keyframe transition area
-      snaplapse.hideLastKeyframeTransition();
-      timelapse.handleEditorModeToolbarChange();
-      $(".addTimetag").button("option", "disabled", false);
-      // The reason to hide and show the elements is the workaround for a webkit refresh bug
-      $(".snaplapse_keyframe_container").hide().show(0);
-
-      resetKeyframeTransitionUI(buildConstraint, keyframeListItem.id);
     };
+
+    var selectAndGo = function($select, keyframeId, skipAnnotation, skipGo) {
+      UTIL.selectSortableElements($sortable, $select);
+      if ( typeof (keyframeId) != "undefined") {
+        var frame = snaplapse.getKeyframeById(keyframeId);
+        if (skipAnnotation != true) {
+          displaySnaplapseFrameAnnotation(frame);
+          setKeyframeTitleUI(frame);
+        }
+        if (skipGo != true) {
+          if (usePresentationSlider && datasetType != undefined)
+            setViewGracefully(timelapse.pixelBoundingBoxToLatLngCenter(frame['bounds']), false, false);
+          else
+            timelapse.warpToBoundingBox(frame['bounds']);
+          timelapse.seek(frame['time']);
+        }
+      }
+    };
+    this.selectAndGo = selectAndGo;
+
+    var loadThumbnailFromServer = function(frame) {
+      var $img = $("#" + composerDivId + "_snaplapse_keyframe_" + frame['id'] + "_thumbnail");
+      var thumbnailURL = generateThumbnailURL(settings["url"], frame.bounds, $img.width(), $img.height(), frame.time);
+      $img.attr("src", thumbnailURL);
+    };
+
+    var generateThumbnailURL = function(root, bounds, width, height, time) {
+      var serverURL = "http://timemachine-api.cmucreatelab.org/thumbnail?";
+      var rootFlag = "root=" + root + "&";
+      var boundsFlag = "boundsLTRB=" + bounds.xmin + "," + bounds.ymin + "," + bounds.xmax + "," + bounds.ymax + "&";
+      var sizeFlag = "width=" + width + "&height=" + height + "&";
+      var timeFlag = "frameTime=" + time;
+      return serverURL + rootFlag + boundsFlag + sizeFlag + timeFlag;
+    };
+    this.generateThumbnailURL = generateThumbnailURL;
 
     var resetKeyframeTransitionUI = function(buildConstraint, keyframeElementId) {
       if (buildConstraint == "duration") {
@@ -996,6 +1334,39 @@ function playCachedSnaplapse(snaplapseId) {
         var text = $(thisTextarea).val();
         $(thisTextarea).val(text.substr(0, maxlength));
       }
+    };
+
+    var setToPresentationViewOnlyMode = function() {
+      var $editorControl;
+      if (datasetType == undefined)
+        $editorControl = $("#" + timelapseViewerDivId + " .toolbar");
+      else
+        $editorControl = $("#" + timelapseViewerDivId + " .customEditorControl");
+      var heightOffset = $editorControl.height() - 3;
+      var isMaxWindowSize = settings["viewportGeometry"] && settings["viewportGeometry"]["max"];
+      if (isMaxWindowSize)
+        heightOffset = 0;
+      var $snaplapseContainer = $("#" + composerDivId + " .snaplapse_keyframe_container");
+      $snaplapseContainer.css({
+        "top": "-=" + heightOffset + "px",
+        "min-height": "73px",
+        "overflow-x": "auto",
+        "border": "1px solid black",
+        "height": "inherit"
+      });
+      if (!isMaxWindowSize) {
+        $snaplapseContainer.css({
+          "width": "inherit",
+          "max-width": $("#" + timelapseViewerDivId + " .tiledContentHolder").width() + "px"
+        });
+      }
+      $sortable.sortable("disable").css({
+        "height": "75px",
+        "margin-left": "-1px",
+        "margin-right": "0",
+        "margin-top": "-1px",
+        "margin-bottom": "0"
+      });
     };
 
     var validateAndSanitizeDuration = function(durationId) {
@@ -1091,11 +1462,10 @@ function playCachedSnaplapse(snaplapseId) {
     };
 
     var _playStopSnaplapse = function() {
-      if (snaplapse.isPlaying()) {
+      if (snaplapse.isPlaying())
         snaplapse.stop();
-      } else {
+      else
         snaplapse.play();
-      }
     };
     this.playStopSnaplapse = _playStopSnaplapse;
 
@@ -1103,10 +1473,16 @@ function playCachedSnaplapse(snaplapseId) {
       if (snaplapse && (snaplapse.getNumKeyframes() >= 1)) {
         var tourUrl = snaplapse.getAsUrlString();
         $("#" + composerDivId + " .saveTimewarpWindow").dialog("open");
-        $("#" + composerDivId + " .saveTimewarpWindow_JSON").val("http://earthengine.google.org/#timelapse/tour=" + tourUrl).focus().select().click(function() {
+        $("#" + composerDivId + " .saveTimewarpWindow_JSON").val(rootURL + tourUrl).focus().select().click(function() {
           $(this).focus().select();
         });
-        $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="854" height="480" src="http://earthengine.google.org/timelapse/player?c=http%3A%2F%2Fearthengine.google.org%2Ftimelapse%2Fdata#tour=' + tourUrl + '" frameborder="0"></iframe>').click(function() {
+        // Text will not be selected when the dialog is opened in IE.
+        // We need to wait some amount of time and try to select the text again.
+        // And even more crazy is that this only works if we keep the initial .focus().select() above. WTF.
+        setTimeout(function() {
+          $("#" + composerDivId + " .saveTimewarpWindow_JSON").focus().select();
+        }, 50);
+        $("#" + composerDivId + " .saveTimewarpWindow_JSON2").val('<iframe width="' + embedWidth + '" height="' + embedHeight + '" src="' + rootEmbedURL + tourUrl + '" frameborder="0"></iframe>').click(function() {
           $(this).focus().select();
         });
       } else {
@@ -1152,13 +1528,11 @@ function playCachedSnaplapse(snaplapseId) {
           var keyframeId = id.split("_")[3];
           $("#" + id).remove();
           snaplapse.deleteKeyframeById(keyframeId);
-
           timelapse.handleEditorModeToolbarChange();
           // The reason to hide and show the elements is to workaround a webkit refresh bug
-          $(".snaplapse_keyframe_container").hide().show(0);
+          $keyframeContainer.hide().show(0);
         }
-
-        handleSnaplapseFrameSelectionChange(false);
+        handleSnaplapseFrameSelectionChange();
       }
     };
     this.deleteSelectedKeyframes = deleteSelectedKeyframes;
@@ -1167,12 +1541,27 @@ function playCachedSnaplapse(snaplapseId) {
     //
     // Constructor code
     //
-    if ($("#" + timelapseViewerDivId + " .customEditorControl").length == 0) {
+    if ($("#" + timelapseViewerDivId + " .customEditorControl").length == 0 && !usePresentationSlider) {
       $("#" + timelapseViewerDivId).append('<div class="snaplapseTourPlayBack playTour"></div>');
       $("#" + timelapseViewerDivId).append('<div class="tourLoadOverlay"><div class="tourLoadOverlayTitleContainer"><div class="tourLoadOverlayTitle"></div></div><img class="tourLoadOverlayPlay" title="Click to start the tour" src="images/tour_play_outline.png"></div></div>');
     }
     timelapse.setSnaplapseViewer(thisObj);
     initializeSnaplapseUI();
     newSnaplapse(null);
+    setPresentationMode(startEditorFromPresentationMode);
+
+    if (!usePresentationSlider)
+      $keyframeContainer.css("z-index", "5");
+
+    // TODO: There is sometimes a race condition that customUI is created before the snaplapseViewer
+    if ( typeof settings["enableCustomUI"] != "undefined" && settings["enableCustomUI"] != false) {
+      var customUI = timelapse.getCustomUI();
+      if (customUI)
+        customUI.fitToWindow();
+    } else {
+      var defaultUI = timelapse.getDefaultUI();
+      if (defaultUI && settings["viewportGeometry"] && settings["viewportGeometry"]["max"])
+        defaultUI.fitToWindow();
+    }
   };
 })();

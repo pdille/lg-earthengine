@@ -105,9 +105,9 @@ if (!Math.uuid) {
 
 (function() {
   var UTIL = org.gigapan.Util;
-  org.gigapan.timelapse.Snaplapse = function(composerDivId, timelapse, settings) {
+  org.gigapan.timelapse.Snaplapse = function(composerDivId, timelapse, settings, usePresentationSlider) {
 
-    var viewer;
+    var snaplapseViewer;
     var eventListeners = {};
     var keyframes = [];
     var keyframesById = {};
@@ -135,7 +135,7 @@ if (!Math.uuid) {
     var extraWaitForStartDuration = 0;
     var startingPlaybackRate = 1;
 
-    var TOUR_SHARING_VERSION = 3;
+    var TOUR_SHARING_VERSION = 4;
 
     var _clearSnaplapse = function() {
 
@@ -143,19 +143,19 @@ if (!Math.uuid) {
         thisObj.stop();
       }
 
-      if (keyframes.length > 0) {
+      if (keyframes.length > 0 && !usePresentationSlider) {
         $("#" + viewerDivId + " .tourLoadOverlay").hide();
         if ($("#" + viewerDivId + " .snaplapseTourPlayBack").children().length > 1) {
           $("#" + viewerDivId + " .snaplapseTourPlayBack").empty();
         }
         $("#" + viewerDivId + " .snaplapseTourPlayBack").hide();
 
-        if ($("#" + viewerDivId + "_customTimeline").is(':hidden')) {
-          viewer.showViewerUI();
-        }
+        if ($("#" + viewerDivId + "_customTimeline").is(':hidden'))
+          snaplapseViewer.showViewerUI();
+
         $("#" + viewerDivId + " .tourLoadOverlay").remove();
         $("#" + viewerDivId).append('<div class="tourLoadOverlay"><div class="tourLoadOverlayTitleContainer"><div class="tourLoadOverlayTitle"></div></div><img class="tourLoadOverlayPlay" title="Click to start the tour" src="images/tour_play_outline.png"></div></div>');
-        viewer.initializeTourOverlyUI();
+        snaplapseViewer.initializeTourOverlyUI();
       }
 
       keyframes.length = 0;
@@ -166,7 +166,6 @@ if (!Math.uuid) {
       timeCounterIntervalHandle = null;
       if (timelapse.getVisualizer())
         timelapse.getVisualizer().deleteAllTags();
-
     };
     this.clearSnaplapse = _clearSnaplapse;
 
@@ -183,11 +182,13 @@ if (!Math.uuid) {
     };
 
     // Hide the transition area for the last key frame on the UI
-    var hideLastKeyframeTransition = function() {
-      var $keyframeItems = $("#" + composerDivId + " .snaplapse_keyframe_list > .ui-selectee");
-      var numItems = $keyframeItems.size();
+    var hideLastKeyframeTransition = function(showIdx) {
+      var $keyframeItems = $("#" + composerDivId + " .snaplapse_keyframe_list").children();
+      var numItems = $keyframeItems.length;
       // Unhide the transition options
-      var $keyframeItems_show = $keyframeItems.eq(numItems - 2);
+      if ( typeof (showIdx) == "undefined" || showIdx == numItems - 1)
+        showIdx = numItems - 2;
+      var $keyframeItems_show = $keyframeItems.eq(showIdx);
       if ($keyframeItems_show) {
         $keyframeItems_show.find(".transition_table_mask").children().show();
         $keyframeItems_show.find(".snaplapse_keyframe_list_item_play_button").button("option", "disabled", false);
@@ -266,9 +267,18 @@ if (!Math.uuid) {
 
     this.setTextAnnotationForKeyframe = function(keyframeId, description, isDescriptionVisible) {
       if (keyframeId && keyframesById[keyframeId]) {
-        if (description != undefined) {
+        if (description != undefined)
           keyframesById[keyframeId]['unsafe_string_description'] = description;
-        }
+        keyframesById[keyframeId]['is-description-visible'] = isDescriptionVisible;
+        return true;
+      }
+      return false;
+    };
+
+    this.setTitleForKeyframe = function(keyframeId, description, isDescriptionVisible) {
+      if (keyframeId && keyframesById[keyframeId]) {
+        if (description != undefined)
+          keyframesById[keyframeId]['unsafe_string_frameTitle'] = description;
         keyframesById[keyframeId]['is-description-visible'] = isDescriptionVisible;
         return true;
       }
@@ -473,6 +483,8 @@ if (!Math.uuid) {
           encoder.write_udecimal(zoom, 2);
           // Keyframe description
           encoder.write_string(keyframes[i]['unsafe_string_description']);
+          // Keyframe title
+          encoder.write_string(keyframes[i]['unsafe_string_frameTitle']);
         }
         // Tour title
         var title = $("#" + composerDivId + " .saveTimewarpWindow_tourTitleInput").val();
@@ -489,7 +501,7 @@ if (!Math.uuid) {
     // of being appended with "unsafe_string_" to ensure awareness that they may contain
     // potentially unsafe user inputted data.
     // It is then up to developer judgment to consider how these strings will be used.
-    this.urlStringToJSON = function(urlString) {
+    var urlStringToJSON = function(urlString) {
       try {
         var encoder = new org.gigapan.timelapse.UrlEncoder(urlString);
         // Decode version
@@ -571,7 +583,11 @@ if (!Math.uuid) {
           frame["bounds"]["ymax"] = bbox.ymax;
           // Decode keyframe subtitle
           frame["unsafe_string_description"] = encoder.read_unsafe_string();
-          frame["is-description-visible"] = frame["unsafe_string_description"] ? true : false;
+          if (version >= 4) {
+            // Decode keyframe title
+            frame["unsafe_string_frameTitle"] = encoder.read_unsafe_string();
+          }
+          frame["is-description-visible"] = (frame["unsafe_string_description"] || frame["unsafe_string_frameTitle"]) ? true : false;
           keyframes.push(frame);
         }
         var checksum;
@@ -592,6 +608,7 @@ if (!Math.uuid) {
         UTIL.error("Error converting snaplapse URL to JSON: " + e.message, e);
       }
     };
+    this.urlStringToJSON = urlStringToJSON;
 
     this.getAsJSON = function() {
       var snaplapseJSON = {};
@@ -622,6 +639,16 @@ if (!Math.uuid) {
       return JSON.stringify(snaplapseJSON, null, 3);
     };
 
+    this.loadPresentation = function(url) {
+      var match = url.match(/(presentation)=([^#?&]*)/);
+      if (match) {
+        var presentation = match[2];
+        snaplapseViewer.loadNewSnaplapse(urlStringToJSON(presentation));
+      } else {
+        alert("Error: Invalid presentation");
+      }
+    };
+
     // The function loads a keyframe everytime it get called
     // e.g. loadFromJSON(json, 0), loadFromJSON(undefined, 1), loadFromJSON(undefined, 2)...
     this.loadFromJSON = function(json, loadIndex) {
@@ -634,8 +661,10 @@ if (!Math.uuid) {
           var tourTitle = loadJSON['snaplapse']['unsafe_string_title'] ? loadJSON['snaplapse']['unsafe_string_title'] : "Untitled";
           // Add the tour title to the save dialogue
           $("#" + composerDivId + " .saveTimewarpWindow_tourTitleInput").val(tourTitle);
-          // Add the tour title to be used during tour playback
-          $("#" + viewerDivId + " .tourLoadOverlayTitle").text("Tour: " + tourTitle);
+          if (!usePresentationSlider) {
+            // Add the tour title to be used during tour playback
+            $("#" + viewerDivId + " .tourLoadOverlayTitle").text("Tour: " + tourTitle);
+          }
         }
         if ( typeof (loadJSON['snaplapse']) != 'undefined' && typeof (loadJSON['snaplapse']['keyframes']) != 'undefined') {
           UTIL.log("Found [" + loadJSON['snaplapse']['keyframes'].length + "] keyframes in the json:\n\n" + json);
@@ -645,7 +674,7 @@ if (!Math.uuid) {
           if ( typeof keyframe['time'] != 'undefined' && typeof keyframe['bounds'] != 'undefined' && typeof keyframe['bounds']['xmin'] != 'undefined' && typeof keyframe['bounds']['ymin'] != 'undefined' && typeof keyframe['bounds']['xmax'] != 'undefined' && typeof keyframe['bounds']['ymax'] != 'undefined') {
             // NOTE: if is-description-visible is undefined, then we define it as *true* in order to maintain
             // backward compatibility with older time warps which don't have this property.
-            this.recordKeyframe(null, keyframe['time'], keyframe['bounds'], keyframe['unsafe_string_description'], ( typeof keyframe['is-description-visible'] == 'undefined') ? true : keyframe['is-description-visible'], keyframe['duration'], true, keyframe['buildConstraint'], keyframe['speed'], keyframe['loopTimes'], keyframe['waitStart'], keyframe['waitEnd'], loadKeyframesLength);
+            this.recordKeyframe(null, keyframe['time'], keyframe['bounds'], keyframe['unsafe_string_description'], ( typeof keyframe['is-description-visible'] == 'undefined') ? true : keyframe['is-description-visible'], keyframe['duration'], true, keyframe['buildConstraint'], keyframe['speed'], keyframe['loopTimes'], keyframe['waitStart'], keyframe['waitEnd'], loadKeyframesLength, keyframe['unsafe_string_frameTitle']);
           } else {
             UTIL.error("Ignoring invalid keyframe during snaplapse load.");
           }
@@ -665,11 +694,11 @@ if (!Math.uuid) {
     };
 
     this.duplicateKeyframe = function(idOfSourceKeyframe) {
-      var keyframeCopy = this.getKeyframeById(idOfSourceKeyframe);
-      this.recordKeyframe(idOfSourceKeyframe, keyframeCopy['time'], keyframeCopy['bounds'], keyframeCopy['unsafe_string_description'], keyframeCopy['is-description-visible'], keyframeCopy['duration'], false, keyframeCopy['buildConstraint'], keyframeCopy['speed'], keyframeCopy['loopTimes'], keyframeCopy['waitStart'], keyframeCopy['waitEnd'], undefined);
+      var keyframeCopy = cloneFrame(keyframesById[idOfSourceKeyframe]);
+      this.recordKeyframe(idOfSourceKeyframe, keyframeCopy['time'], keyframeCopy['bounds'], keyframeCopy['unsafe_string_description'], keyframeCopy['is-description-visible'], keyframeCopy['duration'], false, keyframeCopy['buildConstraint'], keyframeCopy['speed'], keyframeCopy['loopTimes'], keyframeCopy['waitStart'], keyframeCopy['waitEnd'], undefined, keyframeCopy['unsafe_string_frameTitle']);
     };
 
-    this.recordKeyframe = function(idOfKeyframeToAppendAfter, time, bounds, description, isDescriptionVisible, duration, isFromLoad, buildConstraint, speed, loopTimes, waitStart, waitEnd, loadKeyframesLength) {
+    this.recordKeyframe = function(idOfKeyframeToAppendAfter, time, bounds, description, isDescriptionVisible, duration, isFromLoad, buildConstraint, speed, loopTimes, waitStart, waitEnd, loadKeyframesLength, frameTitle) {
       if ( typeof bounds == 'undefined') {
         bounds = timelapse.getBoundingBoxForCurrentView();
       }
@@ -694,6 +723,7 @@ if (!Math.uuid) {
       keyframe['bounds'].ymax = bounds.ymax;
       keyframe['duration'] = sanitizeDuration(duration);
       keyframe['unsafe_string_description'] = ( typeof description == 'undefined') ? '' : description;
+      keyframe['unsafe_string_frameTitle'] = ( typeof frameTitle == 'undefined') ? '' : frameTitle;
       keyframe['is-description-visible'] = ( typeof isDescriptionVisible == 'undefined') ? false : isDescriptionVisible;
 
       // Determine where the new keyframe will be inserted
@@ -743,14 +773,54 @@ if (!Math.uuid) {
       }
     };
 
+    var moveOneKeyframe = function(moveIdx) {
+      // Rearrange keyframes
+      var from = moveIdx.from;
+      var to = moveIdx.to;
+      var elementToMove = keyframes[from]
+      var elementToBuild_1 = keyframes[from - 1];
+
+      // Update the visualizer
+      if (timelapse.getVisualizer())
+        timelapse.getVisualizer().deleteTimeTag(keyframes[from]["id"], keyframes[from - 1]);
+
+      keyframes.splice(from, 1);
+      keyframes.splice(to, 0, elementToMove);
+      // Rebuild the keyframe before the "from" index before sorting
+      if (elementToBuild_1 != undefined)
+        tryBuildKeyframeInterval_refreshKeyframeParas(elementToBuild_1.id);
+      // Rebuild itself
+      tryBuildKeyframeInterval_refreshKeyframeParas(elementToMove.id);
+      // Rebuild the keyframe before itself after sorting
+      var elementToBuild_2 = keyframes[to - 1];
+      if (elementToBuild_2 != undefined)
+        tryBuildKeyframeInterval_refreshKeyframeParas(elementToBuild_2.id);
+
+      // Update the visualizer
+      if (timelapse.getVisualizer())
+        timelapse.getVisualizer().addTimeTag(keyframes, to);
+    };
+    this.moveOneKeyframe = moveOneKeyframe;
+
     var resetKeyframe = function(keyframe) {
-      if (keyframe['buildConstraint'] == "duration") {
+      if ( typeof (keyframe) == "undefined") {
+        // Reset the last keyframe if keyframe is undefined
+        var keyframe = keyframes[keyframes.length - 1];
         keyframe['speed'] = null;
-        keyframe['loopTimes'] = 0;
-      } else if (keyframe['buildConstraint'] == "speed") {
-        keyframe['duration'] = null;
+        keyframe['loopTimes'] = null;
+        if (settings["enableCustomUI"])
+          keyframe['duration'] = 2;
+        else
+          keyframe['duration'] = null;
+      } else {
+        if (keyframe['buildConstraint'] == "duration") {
+          keyframe['speed'] = null;
+          keyframe['loopTimes'] = 0;
+        } else if (keyframe['buildConstraint'] == "speed")
+          keyframe['duration'] = null;
       }
     };
+    this.resetKeyframe = resetKeyframe;
 
     this.getKeyframes = function() {
       var keyframesClone = [];
@@ -871,9 +941,8 @@ if (!Math.uuid) {
     this.getKeyframeById = function(keyframeId) {
       if (keyframeId) {
         var keyframe = keyframesById[keyframeId];
-        if (keyframe) {
-          return cloneFrame(keyframe);
-        }
+        if (keyframe)
+          return keyframe;
       }
       return null;
     };
@@ -908,7 +977,7 @@ if (!Math.uuid) {
     };
 
     this.getSnaplapseViewer = function() {
-      return viewer;
+      return snaplapseViewer;
     };
 
     var cloneFrame = function(frame) {
@@ -935,9 +1004,8 @@ if (!Math.uuid) {
         }
         currentWaitDuration = currentKeyframeInterval.getWaitDuration();
         var currentFrame = currentKeyframeInterval.getStartingFrame();
-        if (currentFrame) {
-          UTIL.selectSelectableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + composerDivId + "_snaplapse_keyframe_" + currentFrame.id));
-        }
+        if (currentFrame)
+          UTIL.selectSortableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + composerDivId + "_snaplapse_keyframe_" + currentFrame.id), true);
 
         var keyframeStartingTime = currentKeyframeInterval.getStartingTime();
 
@@ -1077,7 +1145,7 @@ if (!Math.uuid) {
         }
       } else {
         _stop(true);
-        UTIL.selectSelectableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + composerDivId + "_snaplapse_keyframe_" + keyframes[keyframes.length - 1].id));
+        UTIL.selectSortableElements($("#" + composerDivId + " .snaplapse_keyframe_list"), $("#" + composerDivId + "_snaplapse_keyframe_" + keyframes[keyframes.length - 1].id));
       }
     };
 
@@ -1088,7 +1156,7 @@ if (!Math.uuid) {
 
     org.gigapan.Util.ajax("html", "", "time_warp_composer.html", function(html) {
       $composerDivObj.html(html);
-      viewer = new org.gigapan.timelapse.snaplapse.SnaplapseViewer(thisObj, timelapse, settings);
+      snaplapseViewer = new org.gigapan.timelapse.snaplapse.SnaplapseViewer(thisObj, timelapse, settings, usePresentationSlider);
     });
 
   };
@@ -1186,7 +1254,7 @@ if (!Math.uuid) {
         // If the actual duration is zero, loop times and speed cannot be zero
         if (actualDuration == 0) {
           if (loopTimes <= 0 && !disableTourLooping)
-            loopTimes = 1;
+            loopTimes = defaultLoopTimes;
           if (desiredSpeed == 0 && !disableTourLooping)
             desiredSpeed = 100;
           if (disableTourLooping)

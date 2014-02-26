@@ -40,9 +40,7 @@
  VERIFY NAMESPACE
 
  Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
- */
-
-"use strict";
+ */"use strict";
 
 // Create the global symbol "org" if it doesn't exist.  Throw an error if it does exist but is not an object.
 var org;
@@ -91,17 +89,27 @@ if (!org.gigapan.timelapse.Timelapse) {
 // CODE
 //
 (function() {
-  org.gigapan.timelapse.ScaleBar = function(scaleBarOptions, timelapse) {
+  org.gigapan.timelapse.ScaleBar = function(scaleBarOptions, timelapse, settings) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     // Class variables
     //
     var scaleBarDivId = ( typeof (scaleBarOptions["scaleBarDiv"]) == "undefined") ? "scaleBar2013" : scaleBarOptions["scaleBarDiv"];
     var enableVideoQualitySelector = ( typeof (scaleBarOptions["enableVideoQualitySelector"]) == "undefined") ? false : scaleBarOptions["enableVideoQualitySelector"];
-    var minBarLength = 113;
-    var barLength = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["barLength"]) == "undefined") ? minBarLength : scaleBarOptions["geometry"]["barLength"];
-    var offsetX = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["offsetX"]) == "undefined") ? 0 : scaleBarOptions["geometry"]["offsetX"];
-    var offsetY = ( typeof (scaleBarOptions["geometry"]) == "undefined" || typeof (scaleBarOptions["geometry"]["offsetY"]) == "undefined") ? 0 : scaleBarOptions["geometry"]["offsetY"];
+    var barLength;
+    var datasetType = timelapse.getDatasetType();
+    var scaleBarGeometryLandsat = {
+      "x": 9,
+      "y": 77,
+      "position": "left",
+      "barLength": 113
+    };
+    var scaleBarGeometryMODIS = {
+      "x": 9,
+      "y": 135,
+      "position": "left",
+      "barLength": 135
+    };
     var videoDivId = timelapse.getVideoDivId();
     var viewerDivId = timelapse.getViewerDivId();
     var videoDivHeight;
@@ -306,9 +314,6 @@ if (!org.gigapan.timelapse.Timelapse) {
       $(ratioBarRight).addClass("ratioBarRight");
       $(ratioBarLeft).addClass("ratioBarLeft");
       $(videoQualityContainer).addClass("videoQualityContainer");
-      if ($("#" + viewerDivId + " .addressLookup").length > 0) {
-        $(videoQualityContainer).css("left", 278);
-      }
       var $videoQualitySelectorForm_DOM = $(videoQualitySelectorForm_DOM);
       $videoQualitySelectorForm_DOM.addClass("videoQualitySelectorForm");
       $(videoQualitySelector).addClass("videoQualitySelector");
@@ -354,17 +359,20 @@ if (!org.gigapan.timelapse.Timelapse) {
       var $videoQualityContainer = $(videoQualityContainer);
       $videoQualityContainer.append(videoQuality_text_static_DOM, metersPerPixel_text, metersPerPixel_text_static_DOM, videoQualitySelectorForm_DOM);
       $("#" + videoDivId).append(ratioBarTop, ratioBarBot, ratioBarRight, ratioBarLeft);
-      $("#" + viewerDivId + " .customEditorControl").append(videoQualityContainer);
+      $("#" + viewerDivId).append(videoQualityContainer);
       // Attach events to the video quality selector
       addVideoQualitySelectorEvents();
     };
 
     // Create elements for scale bar
     var createScaleBarElements = function() {
+      var scaleBarGeometry;
+      if (datasetType == "landsat")
+        scaleBarGeometry = scaleBarGeometryLandsat;
+      else if (datasetType == "modis")
+        scaleBarGeometry = scaleBarGeometryMODIS;
       // Set bar length
-      if (barLength < minBarLength) {
-        barLength = minBarLength;
-      }
+      barLength = scaleBarGeometry.barLength;
       // Create elements
       scaleBarContainer = document.createElement("div");
       var scaleBarTop_txt_DOM = document.createElement("div");
@@ -390,10 +398,8 @@ if (!org.gigapan.timelapse.Timelapse) {
       $scaleBarContainer.append(scaleBarTop_txt_DOM, scaleBar_canvas, scaleBarBot_txt_DOM);
       $("#" + videoDivId).append(scaleBarContainer);
       // Set position
-      $scaleBarContainer.css({
-        "bottom": offsetY + 10 + "px",
-        "left": offsetX + 10 + "px"
-      });
+      $scaleBarContainer.css("bottom", scaleBarGeometry.y + "px");
+      $scaleBarContainer.css(scaleBarGeometry.position, scaleBarGeometry.x + "px");
       // Cache elements
       metricUnit_txt_DOM = document.getElementById(scaleBarDivId + "_scaleBarTop_txt");
       englishUnit_txt_DOM = document.getElementById(scaleBarDivId + "_scaleBarBot_txt");

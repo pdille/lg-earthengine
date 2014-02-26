@@ -421,9 +421,8 @@ if (!window['$']) {
             UTIL.log("Chrome bug detected, adding cache buster");
             video.setAttribute('src', src + "?time=" + (new Date().getTime()));
             video.load();
-            if (advancing) {
+            if (advancing)
               video.play();
-            }
           }
         };
         setTimeout(check, timeout);
@@ -466,6 +465,7 @@ if (!window['$']) {
 
         video.style.width = geometry.width + "px";
         video.style.height = geometry.height + "px";
+        video.geometry = geometry;
       } else if (viewerType == "canvas") {
         video.geometry = geometry;
         drawToCanvas(video);
