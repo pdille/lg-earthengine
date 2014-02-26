@@ -433,7 +433,7 @@ public class ControllerActivity extends FragmentActivity {
         	}
         	@Override
         	public void onLoadResource(WebView view, String url) {
-        		if(url.contains("images/controller"))
+        		if(url.contains("thumbnail"))
         			isMasterConnected = true;
         	}
         	@Override
