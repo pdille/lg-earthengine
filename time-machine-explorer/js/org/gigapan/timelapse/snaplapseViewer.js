@@ -126,6 +126,7 @@ function playCachedSnaplapse(snaplapseId) {
     var maxSubtitleLength = 120;
     var datasetType = timelapse.getDatasetType();
     var startEditorFromPresentationMode = settings["startEditorFromPresentationMode"] ? settings["startEditorFromPresentationMode"] : false;
+    var showEditorOnLoad = ( typeof (settings["showEditorOnLoad"]) == "undefined") ? false : settings["showEditorOnLoad"];
     var rootURL;
     var rootEmbedURL;
     var embedWidth = 854;
@@ -487,10 +488,10 @@ function playCachedSnaplapse(snaplapseId) {
       });
       if (!usePresentationSlider) {
         if (!editorEnabled || !settings["enableCustomUI"]) {
-          $("#" + composerDivId).hide();
-          if (!settings["enableCustomUI"]) {
+          if (!showEditorOnLoad)
+            $("#" + composerDivId).hide();
+          if (!settings["enableCustomUI"])
             moveDescriptionBox("up");
-          }
         } else
           moveDescriptionBox("up");
       } else
@@ -673,7 +674,7 @@ function playCachedSnaplapse(snaplapseId) {
           var $snaplapseContainer = $("#" + composerDivId + " .snaplapse_keyframe_container");
 
           // Add mask to viewer to prevent clicking
-          $("#" + timelapseViewerDivId).append('<div class="snaplapsePlayingMask"></div>');
+          $("#" + timelapseViewerDivId).append('<div class="snaplapsePlayingMaskViewer"></div>');
           // Add mask to keyframes container to prevent clicking
           $("#" + composerDivId).append('<div class="snaplapsePlayingMask"></div>');
           var leftOffset = 0;
@@ -702,8 +703,8 @@ function playCachedSnaplapse(snaplapseId) {
             icons: {
               primary: "ui-icon-stop"
             },
-            label: "Stop"
-          });
+            label: "Stop Tour"
+          }).addClass("isPlaying");
           if (timelapse.getMode() != "player") {
             // Stop timewarp playback if we aren't using the editor controls
             $("#" + timelapseViewerDivId + " .stopTimeWarp").button("option", {
@@ -727,16 +728,16 @@ function playCachedSnaplapse(snaplapseId) {
           $("#" + timelapseViewerDivId + ' .addressLookup').attr("disabled", "disabled");
           $("#" + timelapseViewerDivId + ' .timelineSlider').slider("disable");
           $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_stop_outline.png").css("opacity", "1.0");
-          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css({
-            "left": "0px"
-          }).toggleClass("playTour stopTour").attr("title", "Click to stop this tour");
+          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css("left", "0px").toggleClass("playTour stopTour").attr("title", "Click to stop this tour");
+          $("#" + timelapseViewerDivId + " .videoQualityContainer").css("left", "20px");
+          $sortable.css("opacity", "0.5");
         });
 
         snaplapse.addEventListener('stop', function() {
           var visualizer = timelapse.getVisualizer();
           var isFullScreen = timelapse.isFullScreen();
 
-          $("#" + timelapseViewerDivId + " .snaplapsePlayingMask").remove();
+          $("#" + timelapseViewerDivId + " .snaplapsePlayingMaskViewer").remove();
           $("#" + composerDivId + " .snaplapsePlayingMask").remove();
           if (!isFullScreen)
             timelapse.enableEditorToolbarButtons();
@@ -751,8 +752,8 @@ function playCachedSnaplapse(snaplapseId) {
             icons: {
               primary: "ui-icon-play"
             },
-            label: "Play"
-          });
+            label: "Play Tour"
+          }).removeClass("isPlaying");
           if (timelapse.getMode() != "player") {
             $("#" + timelapseViewerDivId + " .stopTimeWarp").button("option", {
               icons: {
@@ -775,9 +776,9 @@ function playCachedSnaplapse(snaplapseId) {
           hideAnnotationBubble();
           $("#" + timelapseViewerDivId + ' .timelineSlider').slider("enable");
           $("#" + timelapseViewerDivId + " .tourLoadOverlayPlay").attr("src", "images/tour_replay_outline.png").css("opacity", "1.0");
-          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css({
-            "left": "60px"
-          }).toggleClass("stopTour playTour").attr("title", "Click to replay this tour");
+          $("#" + timelapseViewerDivId + " .snaplapseTourPlayBack").css("left", "60px").toggleClass("stopTour playTour").attr("title", "Click to replay this tour");
+          $("#" + timelapseViewerDivId + " .videoQualityContainer").css("left", "95px");
+          $sortable.css("opacity", "1");
         });
 
         snaplapse.addEventListener('keyframe-added', function(keyframe, insertionIndex, keyframes) {

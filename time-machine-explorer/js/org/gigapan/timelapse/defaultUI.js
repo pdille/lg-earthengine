@@ -124,6 +124,7 @@ if (!org.gigapan.timelapse.Timelapse) {
     var startEditorFromPresentationMode = ( typeof (settings["startEditorFromPresentationMode"]) == "undefined") ? false : settings["startEditorFromPresentationMode"];
     var showEditorModeButton = ( typeof (settings["showEditorModeButton"]) == "undefined") ? true : settings["showEditorModeButton"];
     var showLogoOnDefaultUI = ( typeof (settings["showLogoOnDefaultUI"]) == "undefined") ? true : settings["showLogoOnDefaultUI"];
+    var showEditorOnLoad = ( typeof (settings["showEditorOnLoad"]) == "undefined") ? false : settings["showEditorOnLoad"];
     var editorEnabled = timelapse.getEditorEnabled();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +190,8 @@ if (!org.gigapan.timelapse.Timelapse) {
           visible: 3.5
         });
       }
+      if (showEditorOnLoad && editorEnabled && datasetType == undefined)
+        $("#" + viewerDivId + " .viewerModeCheckbox").trigger("click");
     };
 
     var createPanControl = function() {
@@ -447,17 +450,6 @@ if (!org.gigapan.timelapse.Timelapse) {
     // Create the editor mode toolbar
     var createEditorModeToolbar = function() {
       var $editorModeToolbar = $("#" + viewerDivId + " .editorModeToolbar");
-      // Create play button
-      $editorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a tour">Play</button>');
-      $("#" + viewerDivId + " .playStopTimewarp").button({
-        icons: {
-          primary: "ui-icon-play"
-        },
-        text: true,
-        disabled: true
-      }).click(function() {
-        timelapse.getSnaplapse().getSnaplapseViewer().playStopSnaplapse();
-      });
       // Create add button
       $editorModeToolbar.append('<button class="addTimetag" title="Add a keyframe">Add</button>');
       $("#" + viewerDivId + " .addTimetag").button({
@@ -516,6 +508,17 @@ if (!org.gigapan.timelapse.Timelapse) {
           return;
         timelapse.getSnaplapse().getSnaplapseViewer().loadNewSnaplapse(null);
         handleEditorModeToolbarChange();
+      });
+      // Create play button
+      $editorModeToolbar.append('<button class="playStopTimewarp" title="Play or stop a tour">Play Tour</button>');
+      $("#" + viewerDivId + " .playStopTimewarp").button({
+        icons: {
+          primary: "ui-icon-play"
+        },
+        text: true,
+        disabled: true
+      }).click(function() {
+        timelapse.getSnaplapse().getSnaplapseViewer().playStopSnaplapse();
       });
       // Create mode toggle button and options
       if (showEditorModeButton) {

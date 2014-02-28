@@ -45,14 +45,31 @@ body, html {
   border-radius: 2px;
 }
 
-.snaplapsePlayingMask {
-  position: absolute;
-  opacity: 0.01;
-  width: 100%;
-  height: 100%;
-  z-index: 19;
-  top: 0px;
-  background: white;
+.editorModeToolbar .playStopTimewarp .ui-icon {
+  background-image: url(../images/ui-icons_custom_256x240.png);
+  margin-left: 3px;
+}
+
+.editorModeToolbar .playStopTimewarp.ui-state-default {
+  width: 120px;
+  color: white;
+  background-color: #71AF71;
+  border-right: 1px solid #656565 !important;
+  border-left: 1px solid #656565 !important;
+}
+
+.editorModeToolbar .playStopTimewarp.ui-state-default:hover:not(
+[disabled]) {
+  background-color: #529952;
+}
+
+.editorModeToolbar .playStopTimewarp.isPlaying.ui-state-default {
+  background-color: rgba(255,0,0,0.4);
+}
+
+.editorModeToolbar .playStopTimewarp.isPlaying.ui-state-default:hover:not(
+[disabled]) {
+  background-color: rgba(255,0,0,0.52);
 }
 
 .editorModeToolbar .newTimewarp {
@@ -226,7 +243,7 @@ body, html {
 }
 
 .viewerModeBtn .ui-icon {
-	margin-left: -2px;
+  margin-left: -2px;
 }
 
 .viewerModeBtn .ui-button-text {
@@ -286,7 +303,7 @@ body, html {
 }
 
 .helpPlayerLabel .ui-icon {
-	margin-left: -1px;
+  margin-left: -1px;
 }
 
 .helpPlayerLabel .ui-button-text {
@@ -620,8 +637,8 @@ body, html {
 }
 
 .tools .ui-state-active {
-  border: 1px solid #ffffff/*{borderColorActive}*/;
-  background: #959595/*{bgColorActive}*/;
+  border: 1px solid #ffffff;
+  background: #959595;
   color: white;
 }
 
@@ -651,7 +668,7 @@ body, html {
 }
 
 .editorModeToolbar .ui-state-active .ui-icon {
-  background-image: url(../images/ui-icons_custom_256x240.png)/*{iconsActive}*/;
+  background-image: url(../images/ui-icons_custom_256x240.png);
 }
 
 .editorModeToolbar .ui-button {
