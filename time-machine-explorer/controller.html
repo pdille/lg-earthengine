@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <link href="css/jquery-ui/smoothness/jquery-ui.custom.css" rel="stylesheet" type="text/css"/>
 
     <script src="js/jquery/jquery.min.js" type="text/javascript"></script>
@@ -141,10 +141,10 @@
       var $toursSlider;
       var $editor;
       var tourContainerWidth;
-      var numberOfTours;
       var isMobile = navigator.userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile/i);
       var enableSorting = false;
       var mode = "player";
+      var tourJSON;
 
       // Auto mode variables
       var isAutoModeDelayTimeoutRunning = false;
@@ -184,7 +184,7 @@
 
       var triggerAutoModeClick = function() {
         currentLocationIdx++;
-        if (currentLocationIdx >= numberOfTours)
+        if (currentLocationIdx >= tourJSON.keyframes.length)
           currentLocationIdx = 0;
         $toursSlider.children().eq(currentLocationIdx).trigger("click");
         autoModeDelayTimeout = setTimeout(function() {
@@ -230,11 +230,11 @@
       };
 
       var createThumbnailSlider = function(tourData) {
-        var tourURL = tourData.items[0].fragment;
+        var encodedTour = tourData.items[0].fragment;
         $toursSlider = $(".toursSlider");
         $toursSliderContainer = $(".toursSliderContainer");
-        //call the server to decode the tour url
-        controller.emit("decodeTour", tourURL);
+        // Call the server to decode the tour url
+        controller.emit("decodeTour", encodedTour);
       };
 
       var setLocation = function(event) {
@@ -261,122 +261,119 @@
         }
       };
 
-      var createThumbnail = function(tourJSON) {
-        // prevent adding repeatedly from multiple masters
-        numberOfTours = tourJSON.keyframes.length;
-        if ($toursSlider.children().length >= numberOfTours)
-          return;
-        for (var i = 0; i < numberOfTours; i++) {
-          var keyframe = tourJSON.keyframes[i];
-          $tourContainer = $('<div />').attr({
-            "class": "tourContainer",
-            "data-bounds": JSON.stringify(keyframe.bounds),
-            "data-centerView": JSON.stringify(keyframe.centerView)
-          });
-          var $tourImg = $('<img />').attr({
-            "class": "tourImg",
-            //"src": readThumbnailFromServer(tour.firstKeyframe)
-            "src": keyframe.thumbnailURL
-          });
-          var $tourTxt = $('<div>' + keyframe.unsafe_string_frameTitle + '</div>').attr({
-            "class": "tourTxt"
-          });
-          var $tourOverlay = $('<div class="tourOverlay"></div>');
-          //attach events
-          if (isMobile && enableSorting == true) {
-            $tourContainer.on("touchstart", function(event) {
-              clearTimeout(doubleTapHoldTimeout);
-              if (!isDoubleTapHold) {
-                //is likely to become a single tap
-                singleTapTimeout = setTimeout(function() {
-                  isSingleTap = true;
-                }, 100);
-              }
-            }).on("touchend", function(event) {
-              clearTimeout(singleTapTimeout);
-              if (isSingleTap) {
-                //consume the single tap
-                isSingleTap = false;
-                setLocation(event);
-                var $currentTarget = $(event.currentTarget);
-                currentLocationIdx = $currentTarget.index();
-                $toursSlider.children().children(".tourOverlay").removeClass("tourOverlayHighlight");
-                $currentTarget.children(".tourOverlay").addClass("tourOverlayHighlight");
-                // Scroll to the position
-                if (isAutoModeDelayTimeoutRunning)
-                  $(document).scrollLeft(Math.round($currentTarget.position().left - $(window).width() / 2 + tourContainerWidth / 2));
-              }
-              if (isDoubleTapHold) {
-                //consume the double tap hold
-                isDoubleTapHold = false;
-                $toursSlider.sortable("disable");
-              }
-            }).on("touchcancel", function(event) {
-              clearTimeout(singleTapTimeout);
+      var addThumbnail = function(keyframe) {
+        var $tourContainer = $('<div />').attr({
+          "class": "tourContainer",
+          "data-bounds": JSON.stringify(keyframe.bounds),
+          "data-centerView": JSON.stringify(keyframe.centerView)
+        });
+        var $tourImg = $('<img />').attr({
+          "class": "tourImg",
+          "src": keyframe.thumbnailURL
+        });
+        var $tourTxt = $('<div>' + keyframe.unsafe_string_frameTitle + '</div>').attr({
+          "class": "tourTxt"
+        });
+        var $tourOverlay = $('<div class="tourOverlay"></div>');
+        // Attach events
+        if (isMobile && enableSorting == true) {
+          $tourContainer.on("touchstart", function(event) {
+            clearTimeout(doubleTapHoldTimeout);
+            if (!isDoubleTapHold) {
+              // Is likely to become a single tap
+              singleTapTimeout = setTimeout(function() {
+                isSingleTap = true;
+              }, 100);
+            }
+          }).on("touchend", function(event) {
+            clearTimeout(singleTapTimeout);
+            if (isSingleTap) {
+              // Consume the single tap
               isSingleTap = false;
-              if (isDoubleTapHold) {
-                //consume the double tap hold
-                isDoubleTapHold = false;
-                $toursSlider.sortable("disable");
-              }
-            }).on("click", function(event) {
-              //is likely to be a double tap hold
-              isSingleTap = false;
-              clearTimeout(singleTapTimeout);
-              isDoubleTapHold = true;
-              $toursSlider.sortable("enable");
-              doubleTapHoldTimeout = setTimeout(function() {
-                //too late to be a double tap hold
-                isDoubleTapHold = false;
-                $toursSlider.sortable("disable");
-              }, 200);
-            });
-          } else {
-            $tourContainer.on("click", function(event) {
               setLocation(event);
               var $currentTarget = $(event.currentTarget);
               currentLocationIdx = $currentTarget.index();
               $toursSlider.children().children(".tourOverlay").removeClass("tourOverlayHighlight");
               $currentTarget.children(".tourOverlay").addClass("tourOverlayHighlight");
               // Scroll to the position
-              var containerOffset = $toursSliderContainer.offset();
-              var containerWidth = $toursSliderContainer.width();
-              var elementOffset = $currentTarget.offset();
-              var elementWidth = $currentTarget.width();
-              var distanceBetweenElementAndLeftEdge = elementOffset.left + elementWidth - containerOffset.left;
-              var distanceBetweenElementAndRightEdge = containerWidth - elementOffset.left + containerOffset.left;
-              if (distanceBetweenElementAndRightEdge < elementWidth * 1.5) {
-                $toursSliderContainer.animate({
-                  scrollLeft: $toursSliderContainer.scrollLeft() + (elementWidth * 1.5 - distanceBetweenElementAndRightEdge)
-                }, 200);
-              } else if (distanceBetweenElementAndLeftEdge < elementWidth * 1.5) {
-                $toursSliderContainer.animate({
-                  scrollLeft: $toursSliderContainer.scrollLeft() - (elementWidth * 1.5 - distanceBetweenElementAndLeftEdge)
-                }, 200);
-              }
-            });
-          }
-          //append elements
-          $tourContainer.append($tourOverlay, $tourImg, $tourTxt);
-          $toursSlider.append($tourContainer);
-          if (tourContainerWidth == undefined) {
-            tourContainerWidth = $tourContainer.width() + 2;
-            //this is used for the bug that some browsers do not fill the background while scrolling.
-            $toursSlider.css("width", numberOfTours * tourContainerWidth);
-          }
-          if ($toursSlider.children().length == numberOfTours)
-            loadingToursComplete();
+              if (isAutoModeDelayTimeoutRunning)
+                $(document).scrollLeft(Math.round($currentTarget.position().left - $(window).width() / 2 + tourContainerWidth / 2));
+            }
+            if (isDoubleTapHold) {
+              // Consume the double tap hold
+              isDoubleTapHold = false;
+              $toursSlider.sortable("disable");
+            }
+          }).on("touchcancel", function(event) {
+            clearTimeout(singleTapTimeout);
+            isSingleTap = false;
+            if (isDoubleTapHold) {
+              // Consume the double tap hold
+              isDoubleTapHold = false;
+              $toursSlider.sortable("disable");
+            }
+          }).on("click", function(event) {
+            // Is likely to be a double tap hold
+            isSingleTap = false;
+            clearTimeout(singleTapTimeout);
+            isDoubleTapHold = true;
+            $toursSlider.sortable("enable");
+            doubleTapHoldTimeout = setTimeout(function() {
+              // Too late to be a double tap hold
+              isDoubleTapHold = false;
+              $toursSlider.sortable("disable");
+            }, 200);
+          });
+        } else {
+          $tourContainer.on("click", function(event) {
+            setLocation(event);
+            var $currentTarget = $(event.currentTarget);
+            currentLocationIdx = $currentTarget.index();
+            $toursSlider.children().children(".tourOverlay").removeClass("tourOverlayHighlight");
+            $currentTarget.children(".tourOverlay").addClass("tourOverlayHighlight");
+            // Scroll to the position
+            var containerOffset = $toursSliderContainer.offset();
+            var containerWidth = $toursSliderContainer.width();
+            var elementOffset = $currentTarget.offset();
+            var elementWidth = $currentTarget.width();
+            var distanceBetweenElementAndLeftEdge = elementOffset.left + elementWidth - containerOffset.left;
+            var distanceBetweenElementAndRightEdge = containerWidth - elementOffset.left + containerOffset.left;
+            if (distanceBetweenElementAndRightEdge < elementWidth * 1.5) {
+              $toursSliderContainer.animate({
+                scrollLeft: $toursSliderContainer.scrollLeft() + (elementWidth * 1.5 - distanceBetweenElementAndRightEdge)
+              }, 200);
+            } else if (distanceBetweenElementAndLeftEdge < elementWidth * 1.5) {
+              $toursSliderContainer.animate({
+                scrollLeft: $toursSliderContainer.scrollLeft() - (elementWidth * 1.5 - distanceBetweenElementAndLeftEdge)
+              }, 200);
+            }
+          });
+        }// Append elements
+        $tourContainer.append($tourOverlay, $tourImg, $tourTxt);
+        $toursSlider.append($tourContainer);
+        if (tourContainerWidth == undefined) {
+          tourContainerWidth = $tourContainer.width() + 2;
+          // This is used for the bug that some browsers do not fill the background while scrolling.
+          $toursSlider.css("width", tourJSON.keyframes.length * tourContainerWidth);
         }
+      };
+
+      var createThumbnails = function() {
+        // Prevent adding repeatedly from multiple masters
+        if ($toursSlider.children().length >= tourJSON.keyframes.length)
+          return;
+        for (var i = 0; i < tourJSON.keyframes.length; i++)
+          addThumbnail(tourJSON.keyframes[i]);
+        loadingComplete();
       };
 
       var setMode = function(newMode) {
         mode = newMode;
         refreshSlider();
-        if (mode == "player") {
+        if (mode == "player")
           $editor.hide();
-        } else if (mode == "editor") {
+        else if (mode == "editor")
           $editor.show();
-        }
       };
 
       var refreshSlider = function() {
@@ -388,13 +385,14 @@
       var createEditorControl = function() {
         $editor = $(".editor");
         $(".add").button().click(function() {
-          console.log("add");
+          var title = "Custom Title";
+          controller.emit("recordKeyframe", title);
         });
       };
 
-      var loadingToursComplete = function() {
-        //set tour slider sortable after loading all images
-        //the sortable will be broken if we create it before loading all images
+      var loadingComplete = function() {
+        // Set tour slider sortable after loading all images
+        // The sortable will be broken if we create it before loading all images
         $toursSlider.sortable({
           axis: "x",
           distance: 30,
@@ -434,14 +432,19 @@
 
       function init() {
         controller = io.connect('/controller');
-        //get tour from server
+        // Get tour from server
         $.ajax({
           //url: "http://timemachine-hyperwall.appspot.com/createlab/tours.json"
           url: "tour.json"
         }).done(function(tourData) {
-          //server calls this function after decoding the tour URL
-          controller.on('sync returnTour', function(tour_str) {
-            createThumbnail(tour_str);
+          // Server calls this function after decoding the tour URL
+          controller.on('sync returnTour', function(data) {
+            tourJSON = data;
+            if ($toursSlider.children().length == 0)
+              createThumbnails();
+          });
+          controller.on('sync returnKeyframe', function(keyframe) {
+            addThumbnail(keyframe);
           });
           controller.on('sync stopScreenIdleTimeout', function() {
             stopScreenIdleTimeout();
