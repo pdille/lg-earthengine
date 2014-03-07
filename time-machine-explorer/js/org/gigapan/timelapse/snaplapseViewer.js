@@ -191,11 +191,7 @@ function playCachedSnaplapse(snaplapseId) {
       $googleLogo.css("bottom", "-=" + 45 + "px");
       $customPlay.hide();
       $modisCustomPlay.hide();
-      $timeText.css({
-        "text-align": "center",
-        "left": "-=" + 14 + "px",
-        "padding-left": "12px"
-      });
+      $timeText.addClass("timeTextTour");
       $googleMapToggle.hide();
       $contextMapResizer.hide();
       $modisTimeText.css("top", "+=25px");
@@ -228,11 +224,7 @@ function playCachedSnaplapse(snaplapseId) {
       $googleLogo.css("bottom", "+=" + 45 + "px");
       $customPlay.show();
       $modisCustomPlay.show();
-      $timeText.css({
-        "text-align": "right",
-        "left": "+=" + 14 + "px",
-        "padding-left": "0px"
-      });
+      $timeText.removeClass("timeTextTour");
       $googleMapToggle.show();
       $contextMapResizer.show();
       $sideToolBar.show();
@@ -902,7 +894,7 @@ function playCachedSnaplapse(snaplapseId) {
       var loopTextId = keyframeListItem.id + "_loopText";
       var titleId = keyframeListItem.id + "_title";
       var tableId = keyframeListItem.id + "_table";
-      var thumbnailButtonId = keyframeListItem.id + "_thumbnailButtonId";
+      var thumbnailButtonId = keyframeListItem.id + "_thumbnailButton";
       var keyframeTableId = keyframeListItem.id + "_keyframeTable";
       var transitionTableId = keyframeListItem.id + "_transitionTable";
 
@@ -973,7 +965,7 @@ function playCachedSnaplapse(snaplapseId) {
       } else {
         // Presentation mode view only state
         content += '			<div id="' + thumbnailButtonId + '" class="snaplapse_keyframe_list_item_thumbnail_container_presentation" title="">';
-        content += '				<div class="snaplapse_keyframe_list_item_thumbnail_overlay"></div>';
+        content += '				<div class="snaplapse_keyframe_list_item_thumbnail_overlay_presentation"></div>';
         if (useThumbnailServer)
           content += '      	<img id="' + thumbnailId + '" width="' + KEYFRAME_THUMBNAIL_WIDTH + '" height="' + KEYFRAME_THUMBNAIL_HEIGHT + '" class="snaplapse_keyframe_list_item_thumbnail"></img>';
         else
@@ -983,6 +975,9 @@ function playCachedSnaplapse(snaplapseId) {
       }
 
       $("#" + keyframeListItem.id).html(content).addClass("snaplapse_keyframe_list_item");
+
+      if (usePresentationSlider)
+        $("#" + keyframeListItem.id).addClass("snaplapse_keyframe_list_item_presentation");
 
       if (startEditorFromPresentationMode && !usePresentationSlider) {
         // Presentation editor only state
@@ -1018,8 +1013,6 @@ function playCachedSnaplapse(snaplapseId) {
         var id = this.id;
         var keyframeId = id.split("_")[3];
         selectAndGo($("#" + keyframeListItem.id), keyframeId);
-        $sortable.children().children().children(".snaplapse_keyframe_list_item_thumbnail_overlay").removeClass("thumbnail_highlight");
-        $(this).children(".snaplapse_keyframe_list_item_thumbnail_overlay").addClass("thumbnail_highlight");
       });
 
       if (usePresentationSlider) {
@@ -1031,6 +1024,35 @@ function playCachedSnaplapse(snaplapseId) {
           var thisKeyframeId = this.id.split("_")[3];
           var thisKeyframe = snaplapse.getKeyframeById(thisKeyframeId);
           setKeyframeCaptionUI(thisKeyframe, this, true);
+        }).click(function(event) {
+          var $element = $(this);
+          $sortable.children().children().children(".snaplapse_keyframe_list_item_thumbnail_overlay_presentation").removeClass("thumbnail_highlight");
+          $element.children(".snaplapse_keyframe_list_item_thumbnail_overlay_presentation").addClass("thumbnail_highlight");
+          var containerOffset = $keyframeContainer.offset();
+          var containerWidth = $keyframeContainer.width();
+          var elementOffset = $element.offset();
+          var elementWidth = $element.width();
+          var distanceBetweenElementAndLeftEdge = elementOffset.left + elementWidth - containerOffset.left;
+          var distanceBetweenElementAndRightEdge = containerWidth - elementOffset.left + containerOffset.left;
+          if (distanceBetweenElementAndRightEdge < elementWidth * 1.5) {
+            $keyframeContainer.animate({
+              scrollLeft: $keyframeContainer.scrollLeft() + (elementWidth * 1.5 - distanceBetweenElementAndRightEdge)
+            }, {
+              duration: 500,
+              start: function() {
+                setKeyframeCaptionUI(undefined, undefined, true);
+              }
+            });
+          } else if (distanceBetweenElementAndLeftEdge < elementWidth * 1.5) {
+            $keyframeContainer.animate({
+              scrollLeft: $keyframeContainer.scrollLeft() - (elementWidth * 1.5 - distanceBetweenElementAndLeftEdge)
+            }, {
+              duration: 500,
+              start: function() {
+                setKeyframeCaptionUI(undefined, undefined, true);
+              }
+            });
+          }
         });
       }
 
@@ -1241,21 +1263,31 @@ function playCachedSnaplapse(snaplapseId) {
               // Set the value of the last keyframe to null (need to use reference but not clone)
               // so swaping it with other keyframes will give a default value
               snaplapse.resetKeyframe();
-              if (!editorEnabled) {
-                // If the editor UI is not enabled, then we are in view-only mode
-                // and we need to seek to the first frame.
-                var firstFrame = snaplapse.getKeyframes()[0];
-                timelapse.warpToBoundingBox(firstFrame.bounds);
-                timelapse.seek(firstFrame.time);
-                displaySnaplapseFrameAnnotation(firstFrame);
-              } else {
-                if (useThumbnailServer) {
-                  // If we are using the thumbnail server, we aren't already seeking to each frame
-                  // so we need to seek to the last frame manually.
-                  timelapse.warpToBoundingBox(frame.bounds);
-                  timelapse.seek(frame.time);
+              if (usePresentationSlider) {
+                $("#" + composerDivId + " .snaplapse_keyframe_container").scrollLeft(0);
+                // Go to the first keyframe if there are no shared view
+                if ( typeof UTIL.getUnsafeHashVars().v == "undefined") {
+                  var firstFrame = snaplapse.getKeyframes()[0];
+                  var $firstFrameThumbnailButton = $("#" + composerDivId + "_snaplapse_keyframe_" + firstFrame.id + "_thumbnailButton");
+                  $firstFrameThumbnailButton.click();
                 }
-                displaySnaplapseFrameAnnotation(frame);
+              } else {
+                if (!editorEnabled) {
+                  // If the editor UI is not enabled, then we are in view-only mode
+                  // and we need to seek to the first frame.
+                  var firstFrame = snaplapse.getKeyframes()[0];
+                  timelapse.warpToBoundingBox(firstFrame.bounds);
+                  timelapse.seek(firstFrame.time);
+                  displaySnaplapseFrameAnnotation(firstFrame);
+                } else {
+                  if (useThumbnailServer) {
+                    // If we are using the thumbnail server, we aren't already seeking to each frame
+                    // so we need to seek to the last frame manually.
+                    timelapse.warpToBoundingBox(frame.bounds);
+                    timelapse.seek(frame.time);
+                  }
+                  displaySnaplapseFrameAnnotation(frame);
+                }
               }
               var listeners = eventListeners["snaplapse-loaded"];
               if (listeners) {
@@ -1352,7 +1384,9 @@ function playCachedSnaplapse(snaplapseId) {
         "top": "-=" + heightOffset + "px",
         "min-height": "73px",
         "overflow-x": "auto",
-        "border": "1px solid black",
+        "border-left": "1px solid black",
+        "border-bottom": "1px solid black",
+        "border-right": "1px solid black",
         "height": "inherit"
       });
       if (!isMaxWindowSize) {
@@ -1365,7 +1399,7 @@ function playCachedSnaplapse(snaplapseId) {
         "height": "75px",
         "margin-left": "-1px",
         "margin-right": "0",
-        "margin-top": "-1px",
+        "margin-top": "0px",
         "margin-bottom": "0"
       });
     };

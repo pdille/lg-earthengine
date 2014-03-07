@@ -324,7 +324,10 @@ if (!window['$']) {
     //
     // Public methods
     //
-    //debug
+    this.getPlayOnLoad = function() {
+      return playOnLoad;
+    };
+
     this.setMinZoomSpeedPerSecond = function(value) {
       minZoomSpeedPerSecond = value;
     };
@@ -881,7 +884,10 @@ if (!window['$']) {
     this.normalizeView = _normalizeView;
 
     var getShareView = function() {
-      return '#v=' + _getViewStr() + '&t=' + thisObj.getCurrentTime().toFixed(2);
+      var shareStr = '#v=' + _getViewStr() + '&t=' + thisObj.getCurrentTime().toFixed(2);
+      if (datasetType == "modis" && customUI.getLocker() != "none")
+        shareStr += '&l=' + customUI.getLocker();
+      return shareStr;
     };
     this.getShareView = getShareView;
 
@@ -1293,7 +1299,8 @@ if (!window['$']) {
       var newTime = getTimeFromHash(unsafeHashVars);
       var tourJSON = getTourFromHash(unsafeHashVars);
       var presentationJSON = getPresentationFromHash(unsafeHashVars);
-      if (newView || newTime || tourJSON || presentationJSON) {
+      var modisLock = getModisLockFromHash(unsafeHashVars);
+      if (newView || newTime || tourJSON || presentationJSON || modisLock) {
         if (newView)
           _setNewView(newView, true);
         if (newTime)
@@ -1312,6 +1319,8 @@ if (!window['$']) {
           if (presentationSliderViewer)
             presentationSliderViewer.loadNewSnaplapse(presentationJSON);
         }
+        if (datasetType == "modis" && modisLock == "month")
+          $("#noLock").click();
         return true;
       } else
         return false;
@@ -1331,6 +1340,15 @@ if (!window['$']) {
       if (unsafeHashVars && unsafeHashVars.t) {
         var newTime = parseFloat(unsafeHashVars.t);
         return newTime;
+      }
+      return null;
+    };
+
+    // Gets a safe MODIS month lock value from an unsafe hash string.
+    var getModisLockFromHash = function(unsafeHashVars) {
+      if (unsafeHashVars && unsafeHashVars.l) {
+        var newMonthLock = unsafeHashVars.l;
+        return newMonthLock;
       }
       return null;
     };
@@ -2535,9 +2553,7 @@ if (!window['$']) {
       if (!defaultUI)
         setupTimelapse();
 
-      // TODO check if currently playing
-      if (playOnLoad)
-        _play();
+      $("#" + viewerDivId + " .timelineSlider").slider("option", "max", frames - 1);
 
       _seek(thisObj.getCurrentTime() + 0.01);
 
