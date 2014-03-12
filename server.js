@@ -77,10 +77,14 @@ var controller = io
     bounce( socket, 'mapViewUpdate', 'controller' );
     bounce( socket, 'mapZoomTo', 'controller' );
     bounce( socket, 'playTour', 'controller' );
-    bounce( socket, 'recordKeyframe', 'controller' );
-    bounce( socket, 'returnKeyframe', 'controller' );
+    bounce( socket, 'addKeyframe', 'controller' );
+    bounce( socket, 'returnAndAddKeyframe', 'controller' );
+    bounce( socket, 'updateKeyframe', 'controller' );
+    bounce( socket, 'returnAndUpdateKeyframe', 'controller' );
     bounce( socket, 'decodeTour', 'controller' );
-    bounce( socket, 'returnTour', 'controller' );
+    bounce( socket, 'returnDecodeTour', 'controller' );
+    bounce( socket, 'encodeTour', 'controller' );
+    bounce( socket, 'returnEncodeTour', 'controller' );
     bounce( socket, 'handlePlayPauseServer', 'controller' );
     bounce( socket, 'handlePlayPauseController', 'controller' );
     bounce( socket, 'setControllerPlayButton', 'controller' );
