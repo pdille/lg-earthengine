@@ -113,6 +113,7 @@ public class ControllerActivity extends FragmentActivity {
     private float minLocationSliderContainerY;
     private float midLocationSliderContainerY;
     private int tapTimeout = ViewConfiguration.getTapTimeout();
+    private int hideEditorTime = 120000;
 
     // Socket connection variables
     private SocketIO socket = null;
@@ -141,6 +142,8 @@ public class ControllerActivity extends FragmentActivity {
     // or the thread dies without throwing errors and the code after .cancel() never gets run
     private TimerTask cancelPreviousZoomingTimerTask = null;
     private Timer cancelPreviousZoomingTimer = new Timer();
+    private TimerTask hideEditorTimerTask = null;
+    private Timer hideEditorTimer = new Timer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,10 +198,9 @@ public class ControllerActivity extends FragmentActivity {
                 return true;
             case R.id.action_toggleEditor:
             	if(isEditorEnabled)
-            		socket.emit("setMode", "player");
+            		setMode("player");
             	else
-            		socket.emit("setMode", "editor");
-            	isEditorEnabled = !isEditorEnabled;
+            		setMode("editor");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -210,19 +212,61 @@ public class ControllerActivity extends FragmentActivity {
 		// Detect the general touch event of the entire screen
 		if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			try {
-				locationSlider.loadUrl("javascript:stopScreenIdleTimeout()");
+				if(isEditorEnabled)
+					stopHideEditorTimer();
+				else
+					locationSlider.loadUrl("javascript:stopScreenIdleTimeout()");
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
 		}
 		if(!isAutoModeDelayTimeoutRunning && event.getAction() == MotionEvent.ACTION_UP) {
 			try {
-				locationSlider.loadUrl("javascript:startScreenIdleTimeout()");
+				if(isEditorEnabled)
+					runHideEditorTimer();
+				else
+					locationSlider.loadUrl("javascript:startScreenIdleTimeout()");
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
 		}
 		return super.dispatchTouchEvent(event);
+	}
+
+	private void setMode(String newMode) {
+		if(newMode.equals("player")) {
+			locationSlider.loadUrl("javascript:setMode('player')");
+    		Boolean doAutoMode = prefs.getBoolean(getString(R.string.key_doAutoMode), Boolean.parseBoolean(getString(R.string.defaultDoAutoMode)));
+    		locationSlider.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
+    		stopHideEditorTimer();
+    		isEditorEnabled = false;
+		} else if (newMode.equals("editor")) {
+    		locationSlider.loadUrl("javascript:setMode('editor')");
+    		locationSlider.loadUrl("javascript:setDoAutoMode(false)");
+    		runHideEditorTimer();
+    		isEditorEnabled = true;
+		}
+	}
+
+	private void runHideEditorTimer() {
+		stopHideEditorTimer();
+    	hideEditorTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                    	setMode("player");
+                    }
+                });
+            }
+        };
+        hideEditorTimer.schedule(hideEditorTimerTask, hideEditorTime);
+	}
+
+	private void stopHideEditorTimer() {
+    	if(hideEditorTimerTask != null)
+    		hideEditorTimerTask.cancel();
+    	hideEditorTimerTask = null;
 	}
 
     private void openSettings() {
@@ -301,14 +345,7 @@ public class ControllerActivity extends FragmentActivity {
         disconnectDialogBuilder.setMessage("Are you sure you want to disconnect?");
         disconnectDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                	   // Calling disconnect() without immediately calling setupSocketConnection()
-                	   // will begin to introduce lag into the App. It seems that CPU usage never decreases.
-                	   // Therefore the App becomes unusable after many disconnects.
-                	   // To avoid this problem, we call setupSocketConnection() without calling disconnect().
-                	   // We *should* call disconnect to free up the sockets, but because of the above issue we can't.
-                	   // Maybe another socket library will help.
-                	   //socket.disconnect();
-                	   showConnectDialog("Disconnected. Connect again.");
+                	   disconnectController();
                    }
                });
         disconnectDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -646,6 +683,18 @@ public class ControllerActivity extends FragmentActivity {
     	mMap.getUiSettings().setRotateGesturesEnabled(false);
     	mMap.getUiSettings().setTiltGesturesEnabled(false);
     	mMap.getUiSettings().setZoomControlsEnabled(false);
+    }
+
+    @JavascriptInterface
+    public void disconnectController() {
+    	// Calling disconnect() without immediately calling setupSocketConnection()
+    	// will begin to introduce lag into the App. It seems that CPU usage never decreases.
+    	// Therefore the App becomes unusable after many disconnects.
+    	// To avoid this problem, we call setupSocketConnection() without calling disconnect().
+    	// We *should* call disconnect to free up the sockets, but because of the above issue we can't.
+    	// Maybe another socket library will help.
+    	//socket.disconnect();
+    	showConnectDialog("Disconnected. Connect again.");
     }
 
     @JavascriptInterface
