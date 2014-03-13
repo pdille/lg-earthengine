@@ -103,7 +103,7 @@ public class ControllerActivity extends FragmentActivity {
     private FrameLayout locationSliderContainer;
     TextView searchTextView;
     private Boolean isSliderHidden = false;
-    private Boolean isEditorEnabled = false;
+    public static Boolean isEditorEnabled = false;
     private float locationSliderHeight;
     private float originLocationSliderContainerY;
     private float originPlayPauseButtonY;

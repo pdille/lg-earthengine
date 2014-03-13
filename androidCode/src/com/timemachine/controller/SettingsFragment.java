@@ -32,7 +32,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     		boolean doAutoMode = sharedPreferences.getBoolean(key, true);
     		System.out.println(key + ": " + doAutoMode);
     		try {
-    			ControllerActivity.locationSlider.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
+    			if(!ControllerActivity.isEditorEnabled)
+    				ControllerActivity.locationSlider.loadUrl("javascript:setDoAutoMode(" + doAutoMode + ")");
     		} catch(Exception e) {
     			e.printStackTrace();
     		}
