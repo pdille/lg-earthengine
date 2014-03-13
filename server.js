@@ -88,7 +88,8 @@ var controller = io
     bounce( socket, 'handlePlayPauseServer', 'controller' );
     bounce( socket, 'handlePlayPauseController', 'controller' );
     bounce( socket, 'setControllerPlayButton', 'controller' );
-    });
+    bounce( socket, 'setMode', 'controller' );
+});
 
 //
 // spacenav, to be modularized

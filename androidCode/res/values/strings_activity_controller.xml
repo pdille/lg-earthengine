@@ -10,6 +10,7 @@
     <string name="action_settings">Settings</string>
     <string name="search_hint">Enter a location</string>
     <string name="action_disconnect">Disconnect</string>
+    <string name="action_toggleEditor">Toggle Editor</string>
     <string name="defaultScreenIdleTime">90</string>
     <string name="defaultAutoModeDelayTime">25</string>
     <string name="defaultDoAutoMode">true</string>

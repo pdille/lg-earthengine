@@ -103,6 +103,7 @@ public class ControllerActivity extends FragmentActivity {
     private FrameLayout locationSliderContainer;
     TextView searchTextView;
     private Boolean isSliderHidden = false;
+    private Boolean isEditorEnabled = false;
     private float locationSliderHeight;
     private float originLocationSliderContainerY;
     private float originPlayPauseButtonY;
@@ -191,6 +192,13 @@ public class ControllerActivity extends FragmentActivity {
                 return true;
             case R.id.action_settings:
             	openSettings();
+                return true;
+            case R.id.action_toggleEditor:
+            	if(isEditorEnabled)
+            		socket.emit("setMode", "player");
+            	else
+            		socket.emit("setMode", "editor");
+            	isEditorEnabled = !isEditorEnabled;
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
