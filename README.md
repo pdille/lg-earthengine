@@ -70,7 +70,7 @@ Download node.js and install it from http://nodejs.org/download/.
   Officially we only support Android (latest - 1), which at this time is Android 4.4 and 4.3.
 However, our app should still work on Android 4.2, with the requirement that you have **Google Maps installed** and you are running **at least version 7.4.0** of it. If you do have to upgrade your Maps to a later version, **you will need to reboot your device after installing it**. If there is also an update to Google Services for your device, you must install that too. Note that **Android 4.2 is the minimum version we support**.
 
-- **[Download Android App](https://github.com/pdille/lg-earthengine/blob/master/androidCode/bin/TimeMachineController.apk?raw=true)**
+- **[Download Android App](https://raw.github.com/pdille/lg-earthengine/master/androidCode/bin/TimeMachineController.apk)**
 
   Download the apk file from the tablet with the link above and install it. You have to enable the following on your tablet to install the app.
   ```
