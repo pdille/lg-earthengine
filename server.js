@@ -8,7 +8,7 @@ var DEBUG = false;
 // listen on this port for all http, socket.io, and multi-axis requests
 var viewsyncPort = 8080;
 // serve http from this path
-var clientroot = path.join(__dirname, 'time-machine-explorer');
+var clientroot = path.join(__dirname);
 
 //
 // start up the HTTP server
