@@ -39,10 +39,6 @@ if (fields.master) {
       controlReciever.emit('handlePlayPauseController', false);
   });
 
-  controlReciever.on('sync setLocation', function(centerView) {
-    timelapse.setNewView(JSON.parse(centerView), false, false)
-  });
-
   controlReciever.on('sync addKeyframe', function(frameTitle) {
     controlReciever.emit('returnAndAddKeyframe', getKeyframeFromCurrentHyperwallView(frameTitle));
   });

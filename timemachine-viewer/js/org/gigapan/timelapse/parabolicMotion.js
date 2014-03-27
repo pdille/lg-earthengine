@@ -6,7 +6,7 @@
 // Dependencies:
 // * None
 //
-// Copyright 2011 Carnegie Mellon University. All rights reserved.
+// Copyright 2014 Carnegie Mellon University. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
@@ -35,6 +35,8 @@
 // Authors:
 // Paul Dille (pdille@andrew.cmu.edu)
 // Randy Sargent (randy.sargent@cs.cmu.edu)
+
+"use strict";
 
 var org;
 org = org || {};
@@ -221,7 +223,7 @@ org.gigapan.timelapse.parabolicMotion.MotionController = function(settings) {
     this.path = path;
     this.pathProgress = 0;
     this.pathSpeed = settings.pathSpeed || 1.5; // screen fraction per second
-    this.animateLastTime = new Date();
+    this.animateLastTime = new Date().getTime();
     //console.log('MotionController.moveAlongPath(' + path.map(function(x) {return x.toString()}).join(',') + ')');
     this._animate();
     this._enableAnimation();

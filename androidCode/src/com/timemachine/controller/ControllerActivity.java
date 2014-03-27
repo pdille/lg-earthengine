@@ -93,9 +93,9 @@ public class ControllerActivity extends FragmentActivity {
     private double lastLng = 0;
     private double lastZoom = 0;
     double roundTo = 1000000;
+    int animateCameraDuration = 5000;
 
     // Controller variables
-    private int setViewGracefullyTime = 7000;
     private SharedPreferences prefs = null;
     public ImageButton playPause;
     private ImageButton drag;
@@ -140,8 +140,6 @@ public class ControllerActivity extends FragmentActivity {
 
     // Need to set the value to null and do a null check before killing the task
     // or the thread dies without throwing errors and the code after .cancel() never gets run
-    private TimerTask cancelPreviousZoomingTimerTask = null;
-    private Timer cancelPreviousZoomingTimer = new Timer();
     private TimerTask hideEditorTimerTask = null;
     private Timer hideEditorTimer = new Timer();
 
@@ -291,7 +289,7 @@ public class ControllerActivity extends FragmentActivity {
     			if (address != null && !address.isEmpty()) {
     				Address location = address.get(0);
     				System.out.println(location.getLatitude() + ", " + location.getLongitude());
-    				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()), maxZoom), setViewGracefullyTime, null);
+    				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(),location.getLongitude()), maxZoom), animateCameraDuration, null);
     			}
     			else
     				System.out.println("No address found.");
@@ -730,31 +728,9 @@ public class ControllerActivity extends FragmentActivity {
     @JavascriptInterface
     public void setMapLocation (String data) {
     	locationDataFromControllerHTML = data;
-    	isMapTimedUpdate = false;
-    	// Create a timer to set it to true
-    	if(cancelPreviousZoomingTimerTask != null)
-    		cancelPreviousZoomingTimerTask.cancel();
-    	cancelPreviousZoomingTimerTask = null;
-    	cancelPreviousZoomingTimerTask = new TimerTask() {
-            @Override
-            public void run() {
-            	isMapTimedUpdate = true;
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                    	// Enable the gesture
-                    	mMap.getUiSettings().setZoomGesturesEnabled(true);
-                    	mMap.getUiSettings().setScrollGesturesEnabled(true);
-                    }
-                });
-            }
-        };
-    	cancelPreviousZoomingTimer.schedule(cancelPreviousZoomingTimerTask, setViewGracefullyTime);
 		// Set the location of the map to this position
     	mapUpdateHandler.post(new Runnable() {
 			public void run () {
-		    	// Disable the gesture
-		    	mMap.getUiSettings().setZoomGesturesEnabled(false);
-		    	mMap.getUiSettings().setScrollGesturesEnabled(false);
 		    	// Set camera
 				String location[] = locationDataFromControllerHTML.split(",");
 				double lat = Double.parseDouble(location[0]);
@@ -763,7 +739,7 @@ public class ControllerActivity extends FragmentActivity {
 				lastLat = Math.round(lat * roundTo) / roundTo;
 				lastLng = Math.round(lng * roundTo) / roundTo;
 				lastZoom = Math.round(zoom * (float)roundTo) / (float)roundTo;
-				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng), zoom), setViewGracefullyTime - 2000, null);
+				mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,lng), zoom), animateCameraDuration, null);
 			}
 		});
     }
